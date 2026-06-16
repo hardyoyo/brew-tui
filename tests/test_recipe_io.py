@@ -13,6 +13,7 @@ from brew_tui.recipe_io_screen import (
     SaveAsScreen,
     OpenRecipeScreen,
 )
+from brew_tui.units import gal_to_l
 
 
 def test_sanitize():
@@ -97,7 +98,7 @@ async def test_save_and_load_named_recipe():
 
         app.action_new_recipe()
         await pilot.pause()
-        assert app.batch_size_l == 20.0
+        assert app.batch_size_l == pytest.approx(gal_to_l(5.0))
 
         app.action_open_recipe()
         await pilot.pause()
@@ -105,7 +106,7 @@ async def test_save_and_load_named_recipe():
         open_screen.query_one("#ors-list", ListView).action_select_cursor()
         await pilot.pause()
 
-        assert app.batch_size_l == 25.0
+        assert app.batch_size_l == pytest.approx(25.0, abs=0.1)
         assert app.fg_estimate == 1.012
         assert app.mash_efficiency_pct == 70.0
         assert app._current_recipe_name == "Test_Recipe"

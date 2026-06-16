@@ -9,6 +9,7 @@ def test_default_values():
     cfg = BrewConfig()
     assert cfg.theme == "textual-dark"
     assert cfg.recipe_path == str(DEFAULT_RECIPE_DIR)
+    assert cfg.unit_system == "imperial"
 
 
 def test_load_missing_file_returns_defaults(tmp_path):

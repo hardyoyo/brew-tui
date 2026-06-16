@@ -32,6 +32,15 @@ from .inventory_edit_screen import InventoryEditScreen
 from .inventory_screen import InventoryScreen
 from .recipe_io_screen import OpenRecipeScreen, SaveAsScreen
 from .styles import DATA_DIR, DATA_FILE, Style, load_styles, search_styles
+from .units import (
+    UnitSystem,
+    gal_to_l,
+    g_to_oz,
+    kg_to_lb,
+    l_to_gal,
+    lb_to_kg,
+    oz_to_g,
+)
 from .widgets import GaugeBar
 
 
@@ -66,17 +75,23 @@ class HopAddition:
 
 
 class MaltRow(Horizontal):
-    def __init__(self, addition: MaltAddition):
+    def __init__(self, addition: MaltAddition, imperial: bool):
         super().__init__(classes="malt-row")
         self._addition = addition
+        self._imperial = imperial
 
     def compose(self) -> ComposeResult:
+        wt = (
+            kg_to_lb(self._addition.weight_kg)
+            if self._imperial
+            else self._addition.weight_kg
+        )
         yield Label(
             f"{self._addition.name}  ({self._addition.lovibond:.0f}L, {self._addition.ppg}PPG)",
             classes="malt-row-name",
         )
         yield Input(
-            value=str(self._addition.weight_kg),
+            value=f"{wt:.3f}",
             id=f"malt-wt-{self._addition.uid}",
             classes="malt-row-wt",
         )
@@ -84,17 +99,23 @@ class MaltRow(Horizontal):
 
 
 class HopRow(Horizontal):
-    def __init__(self, addition: HopAddition):
+    def __init__(self, addition: HopAddition, imperial: bool):
         super().__init__(classes="hop-row")
         self._addition = addition
+        self._imperial = imperial
 
     def compose(self) -> ComposeResult:
+        wt = (
+            g_to_oz(self._addition.weight_g)
+            if self._imperial
+            else self._addition.weight_g
+        )
         yield Label(
             f"{self._addition.name}  ({self._addition.alpha_acid_pct:.1f}%)",
             classes="hop-row-name",
         )
         yield Input(
-            value=str(self._addition.weight_g),
+            value=f"{wt:.2f}",
             id=f"hop-wt-{self._addition.uid}",
             classes="hop-row-wt",
         )
@@ -115,6 +136,7 @@ class BrewTUI(App):
         ("ctrl+i", "open_inventory", "Build Inventory"),
         ("ctrl+e", "edit_inventory", "Edit Inventory"),
         ("ctrl+f", "focus_style_filter", "Style Search"),
+        ("ctrl+u", "toggle_units", "Toggle Units"),
     ]
 
     def __init__(self, config: BrewConfig | None = None):
@@ -144,11 +166,14 @@ class BrewTUI(App):
     _hop_additions: List[HopAddition] = []
     _current_recipe_name: Optional[str] = None
 
+    def _imperial(self) -> bool:
+        return self._config.unit_system == UnitSystem.IMPERIAL
+
     def compose(self) -> ComposeResult:
         yield Header()
         with Horizontal(id="main"):
             with Vertical(id="left-pane"):
-                yield Label("Batch Size (L)")
+                yield Label("Batch Size (L)", id="batch-size-label")
                 yield Input(id="batch-size", value="20.0")
 
                 yield Static("── Malt Additions ──", id="malt-add-header")
@@ -246,11 +271,25 @@ class BrewTUI(App):
             self.theme = self._config.theme
             theme_select.value = self._config.theme
 
-        self._malt_additions = [MaltAddition("Pale 2-Row", 5.0, 2.0, 37.0)]
+        # Unit labels and defaults
+        self._update_unit_labels()
+        if self._imperial():
+            self.batch_size_l = gal_to_l(5.0)
+            self.query_one("#batch-size", Input).value = "5.0"
+
+        self._malt_additions = [
+            MaltAddition(
+                "Pale 2-Row", lb_to_kg(11.0) if self._imperial() else 5.0, 2.0, 37.0
+            ),
+        ]
         self._rebuild_malt_ui()
 
         self._painted = True
         self._recalc()
+
+    def _update_unit_labels(self) -> None:
+        label = "gal" if self._imperial() else "L"
+        self.query_one("#batch-size-label", Label).update(f"Batch Size ({label})")
 
     @staticmethod
     def _is_valid_float(raw: str) -> bool:
@@ -283,13 +322,13 @@ class BrewTUI(App):
         container = self.query_one("#malt-additions", Vertical)
         container.remove_children()
         for a in self._malt_additions:
-            container.mount(MaltRow(a))
+            container.mount(MaltRow(a, self._imperial()))
 
     def _rebuild_hop_ui(self) -> None:
         container = self.query_one("#hop-additions", Vertical)
         container.remove_children()
         for a in self._hop_additions:
-            container.mount(HopRow(a))
+            container.mount(HopRow(a, self._imperial()))
 
     # ── List population ──────────────────────────────────────────
 
@@ -329,7 +368,9 @@ class BrewTUI(App):
             return
 
         if input_id == "batch-size":
-            self.batch_size_l = self._clamp(float(raw), 0.1, 200.0)
+            raw_val = float(raw)
+            batch_l = raw_val if not self._imperial() else gal_to_l(raw_val)
+            self.batch_size_l = self._clamp(batch_l, 0.1, 200.0)
         elif input_id == "fg-estimate":
             self.fg_estimate = self._clamp(float(raw), 0.990, 1.200)
         elif input_id == "mash-efficiency":
@@ -342,18 +383,22 @@ class BrewTUI(App):
             self.hop_query = raw
         elif input_id and input_id.startswith("malt-wt-"):
             uid = int(input_id.split("-")[-1])
-            weight = self._clamp(float(raw), 0.0, 100.0)
+            raw_lb_or_kg = float(raw)
+            weight_kg = lb_to_kg(raw_lb_or_kg) if self._imperial() else raw_lb_or_kg
+            weight_kg = self._clamp(weight_kg, 0.0, 100.0)
             for a in self._malt_additions:
                 if a.uid == uid:
-                    a.weight_kg = weight
+                    a.weight_kg = weight_kg
                     break
             self._require_recalc()
         elif input_id and input_id.startswith("hop-wt-"):
             uid = int(input_id.split("-")[-1])
-            weight = self._clamp(float(raw), 0.0, 5000.0)
+            raw_oz_or_g = float(raw)
+            weight_g = oz_to_g(raw_oz_or_g) if self._imperial() else raw_oz_or_g
+            weight_g = self._clamp(weight_g, 0.0, 5000.0)
             for a in self._hop_additions:
                 if a.uid == uid:
-                    a.weight_g = weight
+                    a.weight_g = weight_g
                     break
             self._require_recalc()
         elif input_id and input_id.startswith("hop-time-"):
@@ -385,9 +430,10 @@ class BrewTUI(App):
             matches = search_malts(self._all_malts, self.malt_query)
             if lv.index < len(matches):
                 malt = matches[lv.index]
+                weight_kg = lb_to_kg(1.0) if self._imperial() else 1.0
                 addition = MaltAddition(
                     name=malt.name,
-                    weight_kg=1.0,
+                    weight_kg=weight_kg,
                     lovibond=malt.lovibond,
                     ppg=malt.ppg,
                 )
@@ -399,9 +445,10 @@ class BrewTUI(App):
             matches = search_hops(self._all_hops, self.hop_query)
             if lv.index < len(matches):
                 hop = matches[lv.index]
+                weight_g = oz_to_g(1.0) if self._imperial() else 30.0
                 addition = HopAddition(
                     name=hop.name,
-                    weight_g=30.0,
+                    weight_g=weight_g,
                     alpha_acid_pct=hop.alpha_acid_pct,
                     boil_time_min=60.0,
                 )
@@ -476,6 +523,25 @@ class BrewTUI(App):
             self._on_inventory_edit_closed,
         )
 
+    def action_toggle_units(self) -> None:
+        if self._imperial():
+            self._config.unit_system = UnitSystem.METRIC
+        else:
+            self._config.unit_system = UnitSystem.IMPERIAL
+        self._config.save()
+        self._update_unit_labels()
+
+        # Convert batch-size input in place
+        batch_input = self.query_one("#batch-size", Input)
+        if self._imperial():
+            batch_input.value = f"{l_to_gal(self.batch_size_l):.1f}"
+        else:
+            batch_input.value = f"{self.batch_size_l:.1f}"
+
+        self._rebuild_malt_ui()
+        self._rebuild_hop_ui()
+        self.notify(f"Units: {self._config.unit_system}", timeout=2)
+
     def _on_inventory_edit_closed(self, _result: object = None) -> None:
         inv_path = inventory_path(Path(self._config.recipe_path))
         self._inventory = Inventory.load(inv_path)
@@ -510,11 +576,15 @@ class BrewTUI(App):
         self._malt_additions.clear()
         self._hop_additions.clear()
         self._current_recipe_name = None
-        self.batch_size_l = 20.0
+        if self._imperial():
+            self.batch_size_l = gal_to_l(5.0)
+            self.query_one("#batch-size", Input).value = "5.0"
+        else:
+            self.batch_size_l = 20.0
+            self.query_one("#batch-size", Input).value = "20.0"
         self.fg_estimate = 1.010
         self.mash_efficiency_pct = 75.0
         self.selected_style = None
-        self.query_one("#batch-size", Input).value = "20.0"
         self.query_one("#fg-estimate", Input).value = "1.010"
         self.query_one("#mash-efficiency", Input).value = "75"
         self._rebuild_malt_ui()
@@ -569,7 +639,13 @@ class BrewTUI(App):
             HopAddition(**a) for a in recipe.get("hop_additions", [])
         ]
 
-        self.query_one("#batch-size", Input).value = str(self.batch_size_l)
+        # Set input values in display units
+        if self._imperial():
+            self.query_one("#batch-size", Input).value = (
+                f"{l_to_gal(self.batch_size_l):.1f}"
+            )
+        else:
+            self.query_one("#batch-size", Input).value = str(self.batch_size_l)
         self.query_one("#fg-estimate", Input).value = str(self.fg_estimate)
         self.query_one("#mash-efficiency", Input).value = str(self.mash_efficiency_pct)
         self._rebuild_malt_ui()
@@ -579,7 +655,8 @@ class BrewTUI(App):
 
     def _build_recipe_dict(self) -> dict:
         return {
-            "version": 1,
+            "version": 2,
+            "unit_system": self._config.unit_system,
             "batch_size_l": self.batch_size_l,
             "fg_estimate": self.fg_estimate,
             "mash_efficiency_pct": self.mash_efficiency_pct,

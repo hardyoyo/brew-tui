@@ -3,6 +3,7 @@
 import pytest
 from textual.widgets import Input, ListView, Select, Static
 from brew_tui.app import BrewTUI, MaltAddition, HopAddition
+from brew_tui.units import lb_to_kg
 
 
 def _text(widget: Static) -> str:
@@ -282,7 +283,8 @@ async def test_select_malt_adds_addition():
         assert added.name == malt.name
         assert added.ppg == malt.ppg
         assert added.lovibond == malt.lovibond
-        assert added.weight_kg == 1.0  # default
+        expected_kg = lb_to_kg(1.0) if app._imperial() else 1.0
+        assert added.weight_kg == pytest.approx(expected_kg, rel=1e-3)
 
 
 @pytest.mark.asyncio
@@ -394,12 +396,14 @@ async def test_valid_input_removes_invalid_class():
 
 @pytest.mark.asyncio
 async def test_batch_size_clamped_low():
-    """Batch size is clamped to minimum 0.1."""
+    """Batch size is clamped to minimum 0.1 L regardless of unit."""
     app = BrewTUI()
     async with app.run_test(headless=True, size=(120, 30)) as pilot:
         await pilot.pause()
         inp = app.query_one("#batch-size", Input)
-        inp.value = "0.05"
+        # Input is interpreted in display units (imperial → gal).
+        # 0.001 gal ≈ 0.0038 L → clamped to 0.1 L
+        inp.value = "0.001"
         await pilot.pause()
         assert app.batch_size_l == 0.1
 
