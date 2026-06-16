@@ -358,6 +358,8 @@ async def test_full_workflow():
 
         btn = app.query_one("#btn-inventory")
         assert btn.label == "Build Inventory"
+        assert app.query_one("#btn-save-as").label == "Save As..."
+        assert app.query_one("#btn-open").label == "Open..."
 
         ts = app.query_one("#theme-select", Select)
         assert len(ts._options) > 0
