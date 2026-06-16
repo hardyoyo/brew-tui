@@ -86,7 +86,7 @@
 - [x] 16 new tests (114 total): ABV, Tinseth util, multi-IBU, Style FG/ABV, dynamic additions
 
 ## Future
-- [ ] Screenshots in docs/ and README
+- [x] Screenshots in docs/ and README
 - [ ] Input validation feedback (visual indicator on parse failure)
 - [ ] Inventory edit/delete capability
 - [ ] Responsive left pane width
