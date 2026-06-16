@@ -1,0 +1,65 @@
+Screen {
+    background: #1c1c1e;
+}
+
+#main {
+    layout: horizontal;
+    height: 1fr;
+}
+
+#left-pane {
+    width: 38;
+    padding: 1 2;
+    border: solid $primary;
+    background: #232326;
+}
+
+#right-pane {
+    width: 1fr;
+    padding: 1 2;
+    border: solid $secondary;
+    background: #232326;
+}
+
+Label {
+    margin: 1 0 0 0;
+    color: #d4be98;
+    text-style: bold;
+}
+
+Input {
+    margin: 0 0 1 0;
+    background: #2c2c30;
+    color: #ebdbb2;
+}
+
+#style-header, #dashboard-header {
+    content-align: center top;
+    text-style: bold;
+    color: $primary;
+    margin: 0 0 1 0;
+}
+
+#style-list {
+    height: 6;
+    max-height: 6;
+    border: solid $secondary;
+    margin: 0 0 1 0;
+}
+
+#style-info {
+    margin: 0 0 1 0;
+    padding: 0 1;
+    color: #ebdbb2;
+}
+
+#og-display, #srm-display, #ibu-display {
+    margin: 1 0 0 0;
+    padding: 0 1;
+    color: #ebdbb2;
+}
+
+GaugeBar {
+    height: 1;
+    margin: 0 0 1 1;
+}
