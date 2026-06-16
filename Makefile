@@ -1,4 +1,4 @@
-.PHONY: install install-dev test lint format clean screenshots release
+.PHONY: install install-dev test lint format clean screenshots release coverage
 
 install:
 	pip install -e .
@@ -8,6 +8,9 @@ install-dev:
 
 test:
 	pytest -v
+
+coverage:
+	pytest --cov --cov-report=term-missing
 
 lint:
 	ruff check src/ tests/
