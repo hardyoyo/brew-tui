@@ -8,7 +8,9 @@ Screen {
 }
 
 #left-pane {
-    width: 40;
+    width: 38%;
+    min-width: 35;
+    max-width: 50;
     padding: 1 2;
     border: solid $primary;
     background: $surface;
@@ -39,6 +41,14 @@ Input {
 Input:focus {
     background: $surface;
     border: tall $accent;
+}
+
+Input.invalid {
+    border: tall $error;
+}
+
+Input.invalid:focus {
+    border: tall $error;
 }
 
 #style-header, #settings-header, #dashboard-header,
@@ -161,4 +171,52 @@ Select:focus {
 
 #fg-estimate, #mash-efficiency {
     margin: 0 0 1 0;
+}
+
+InventoryEditScreen {
+    background: $surface;
+}
+
+#ei-intro {
+    margin: 1 2;
+    color: $text;
+}
+
+#ei-scroll {
+    margin: 0 2;
+}
+
+#ei-scroll .ei-section {
+    text-style: bold;
+    color: $primary;
+    margin: 1 0 0 0;
+}
+
+#ei-scroll .ei-row {
+    layout: horizontal;
+    height: 3;
+    margin: 0 0 0 1;
+}
+
+#ei-scroll .ei-item-label {
+    width: 1fr;
+    padding: 0 1;
+    color: $text;
+}
+
+#ei-scroll .ei-rm-btn {
+    width: 3;
+    background: $error;
+    color: $text;
+    border: none;
+    min-width: 3;
+}
+
+#ei-scroll #ei-empty {
+    color: $text;
+    margin: 1 1;
+}
+
+#ei-delete-all {
+    margin: 1 0 0 0;
 }

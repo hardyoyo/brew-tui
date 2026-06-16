@@ -21,7 +21,6 @@ from textual.widgets import (
 
 from .config import BrewConfig
 from .engine import (
-    _to_float,
     calculate_abv,
     calculate_ibu_multi,
     calculate_og,
@@ -29,6 +28,7 @@ from .engine import (
 )
 from .ingredients import Malt, Hop, get_malts, get_hops, search_malts, search_hops
 from .inventory import inventory_path, Inventory
+from .inventory_edit_screen import InventoryEditScreen
 from .inventory_screen import InventoryScreen
 from .styles import DATA_DIR, DATA_FILE, Style, load_styles, search_styles
 from .widgets import GaugeBar
@@ -111,7 +111,9 @@ class BrewTUI(App):
     CSS_PATH = "brew_tui.tcss"
     BINDINGS = [
         ("ctrl+t", "cycle_theme", "Theme"),
-        ("ctrl+i", "open_inventory", "Inventory"),
+        ("ctrl+i", "open_inventory", "Build Inventory"),
+        ("ctrl+e", "edit_inventory", "Edit Inventory"),
+        ("ctrl+f", "focus_style_filter", "Style Search"),
     ]
 
     def __init__(self, config: BrewConfig | None = None):
@@ -175,6 +177,7 @@ class BrewTUI(App):
                 yield Button("Save Recipe", id="btn-save", variant="primary")
                 yield Button("Load Recipe", id="btn-load")
                 yield Button("Build Inventory", id="btn-inventory", variant="primary")
+                yield Button("Edit Inventory", id="btn-edit-inventory")
 
                 yield Static("═══ Dashboard ═══", id="dashboard-header")
                 yield Static("OG:  —", id="og-display")
@@ -247,6 +250,22 @@ class BrewTUI(App):
         self._painted = True
         self._recalc()
 
+    @staticmethod
+    def _is_valid_float(raw: str) -> bool:
+        if raw is None:
+            return False
+        if isinstance(raw, str) and raw.strip() == "":
+            return False
+        try:
+            float(raw)
+            return True
+        except (ValueError, TypeError):
+            return False
+
+    @staticmethod
+    def _clamp(value: float, lo: float, hi: float) -> float:
+        return max(lo, min(hi, value))
+
     def _require_recalc(self) -> None:
         if self._recalc_id:
             return
@@ -301,13 +320,18 @@ class BrewTUI(App):
     def on_input_changed(self, event: Input.Changed) -> None:
         raw = event.value
         input_id = event.input.id
+        valid = self._is_valid_float(raw)
+        event.input.set_class(not valid, "invalid")
+
+        if not valid:
+            return
 
         if input_id == "batch-size":
-            self.batch_size_l = _to_float(raw)
+            self.batch_size_l = self._clamp(float(raw), 0.1, 200.0)
         elif input_id == "fg-estimate":
-            self.fg_estimate = _to_float(raw, 1.010)
+            self.fg_estimate = self._clamp(float(raw), 0.990, 1.200)
         elif input_id == "mash-efficiency":
-            self.mash_efficiency_pct = _to_float(raw, 75.0)
+            self.mash_efficiency_pct = self._clamp(float(raw), 1.0, 100.0)
         elif input_id == "style-filter":
             self.style_query = raw
         elif input_id == "malt-filter":
@@ -316,7 +340,7 @@ class BrewTUI(App):
             self.hop_query = raw
         elif input_id and input_id.startswith("malt-wt-"):
             uid = int(input_id.split("-")[-1])
-            weight = _to_float(raw, 0.0)
+            weight = self._clamp(float(raw), 0.0, 100.0)
             for a in self._malt_additions:
                 if a.uid == uid:
                     a.weight_kg = weight
@@ -324,7 +348,7 @@ class BrewTUI(App):
             self._require_recalc()
         elif input_id and input_id.startswith("hop-wt-"):
             uid = int(input_id.split("-")[-1])
-            weight = _to_float(raw, 0.0)
+            weight = self._clamp(float(raw), 0.0, 5000.0)
             for a in self._hop_additions:
                 if a.uid == uid:
                     a.weight_g = weight
@@ -332,7 +356,7 @@ class BrewTUI(App):
             self._require_recalc()
         elif input_id and input_id.startswith("hop-time-"):
             uid = int(input_id.split("-")[-1])
-            t = _to_float(raw, 0.0)
+            t = self._clamp(float(raw), 0.0, 180.0)
             for a in self._hop_additions:
                 if a.uid == uid:
                     a.boil_time_min = t
@@ -423,6 +447,9 @@ class BrewTUI(App):
         elif btn_id == "btn-inventory":
             self.action_open_inventory()
 
+        elif btn_id == "btn-edit-inventory":
+            self.action_edit_inventory()
+
         elif btn_id == "btn-new-recipe":
             self.action_new_recipe()
 
@@ -437,6 +464,30 @@ class BrewTUI(App):
             InventoryScreen(self._config.recipe_path),
             self._on_inventory_closed,
         )
+
+    def action_focus_style_filter(self) -> None:
+        self.query_one("#style-filter", Input).focus()
+
+    def action_edit_inventory(self) -> None:
+        self.push_screen(
+            InventoryEditScreen(self._config.recipe_path),
+            self._on_inventory_edit_closed,
+        )
+
+    def _on_inventory_edit_closed(self, _result: object = None) -> None:
+        inv_path = inventory_path(Path(self._config.recipe_path))
+        self._inventory = Inventory.load(inv_path)
+        self._all_malts = get_malts()
+        self._all_hops = get_hops()
+        if self._inventory.nonempty:
+            for m in self._inventory.malts:
+                self._all_malts.append(Malt(f"[I] {m.name}", m.ppg, m.lovibond))
+            for m in self._inventory.specialty_grains:
+                self._all_malts.append(Malt(f"[I] {m.name}", m.ppg, m.lovibond))
+            for h in self._inventory.hops:
+                self._all_hops.append(Hop(f"[I] {h.name}", h.alpha_acid_pct))
+        self._populate_malt_list(self._all_malts)
+        self._populate_hop_list(self._all_hops)
 
     def _on_inventory_closed(self, _result: object = None) -> None:
         inv_path = inventory_path(Path(self._config.recipe_path))

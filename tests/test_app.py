@@ -1,7 +1,7 @@
 """Integration / smoke tests for the Textual TUI app."""
 
 import pytest
-from textual.widgets import ListView, Select, Static
+from textual.widgets import Input, ListView, Select, Static
 from brew_tui.app import BrewTUI, MaltAddition, HopAddition
 
 
@@ -361,3 +361,85 @@ async def test_full_workflow():
 
         ts = app.query_one("#theme-select", Select)
         assert len(ts._options) > 0
+
+
+@pytest.mark.asyncio
+async def test_invalid_input_shows_red_border():
+    """Non-numeric batch-size input gets .invalid CSS class."""
+    app = BrewTUI()
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+        inp = app.query_one("#batch-size", Input)
+        inp.value = "abc"
+        await pilot.pause()
+        assert "invalid" in inp.classes
+
+
+@pytest.mark.asyncio
+async def test_valid_input_removes_invalid_class():
+    """Typing a valid number removes the .invalid CSS class."""
+    app = BrewTUI()
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+        inp = app.query_one("#batch-size", Input)
+        inp.value = "abc"
+        await pilot.pause()
+        assert "invalid" in inp.classes
+        inp.value = "25.0"
+        await pilot.pause()
+        assert "invalid" not in inp.classes
+
+
+@pytest.mark.asyncio
+async def test_batch_size_clamped_low():
+    """Batch size is clamped to minimum 0.1."""
+    app = BrewTUI()
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+        inp = app.query_one("#batch-size", Input)
+        inp.value = "0.05"
+        await pilot.pause()
+        assert app.batch_size_l == 0.1
+
+
+@pytest.mark.asyncio
+async def test_fg_estimate_clamped_high():
+    """FG estimate is clamped to maximum 1.200."""
+    app = BrewTUI()
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+        inp = app.query_one("#fg-estimate", Input)
+        inp.value = "1.300"
+        await pilot.pause()
+        assert app.fg_estimate == 1.200
+
+
+@pytest.mark.asyncio
+async def test_mash_efficiency_clamped():
+    """Mash efficiency is clamped to 1..100 range."""
+    app = BrewTUI()
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+        inp = app.query_one("#mash-efficiency", Input)
+        inp.value = "0"
+        await pilot.pause()
+        assert app.mash_efficiency_pct == 1.0
+        inp.value = "150"
+        await pilot.pause()
+        assert app.mash_efficiency_pct == 100.0
+
+
+@pytest.mark.asyncio
+async def test_is_valid_float():
+    """_is_valid_float handles common cases correctly."""
+    app = BrewTUI()
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+        assert app._is_valid_float("1.0")
+        assert app._is_valid_float("0")
+        assert app._is_valid_float("-5")
+        assert app._is_valid_float("1.010")
+        assert not app._is_valid_float("")
+        assert not app._is_valid_float("abc")
+        assert not app._is_valid_float("1.2.3")
+        assert not app._is_valid_float(None)
