@@ -1,10 +1,9 @@
 """Inventory data models, persistence, and conversational helpers."""
 
-
 import json
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import List, Self, Tuple
+from typing import List, Self
 
 
 @dataclass
@@ -55,7 +54,9 @@ class Inventory:
                     malts=[MaltItem(**m) for m in data.get("malts", [])],
                     hops=[HopItem(**h) for h in data.get("hops", [])],
                     yeasts=[YeastItem(**y) for y in data.get("yeasts", [])],
-                    specialty_grains=[MaltItem(**g) for g in data.get("specialty_grains", [])],
+                    specialty_grains=[
+                        MaltItem(**g) for g in data.get("specialty_grains", [])
+                    ],
                 )
             except (json.JSONDecodeError, KeyError, TypeError):
                 pass
@@ -67,7 +68,9 @@ class Inventory:
             names = ", ".join(f"{m.name} ({m.amount_kg} kg)" for m in self.malts)
             lines.append(f"Malts: {names}")
         if self.specialty_grains:
-            names = ", ".join(f"{g.name} ({g.amount_kg} kg)" for g in self.specialty_grains)
+            names = ", ".join(
+                f"{g.name} ({g.amount_kg} kg)" for g in self.specialty_grains
+            )
             lines.append(f"Specialty grains: {names}")
         if self.hops:
             names = ", ".join(f"{h.name} ({h.amount_g} g)" for h in self.hops)

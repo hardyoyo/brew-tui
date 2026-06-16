@@ -3,7 +3,6 @@
 import pytest
 from textual.widgets import Input, ListView, Select, Static
 from brew_tui.app import BrewTUI
-from brew_tui.config import BrewConfig
 
 
 def _text(widget: Static) -> str:

@@ -1,6 +1,13 @@
 """Unit tests for brew_tui.ingredients."""
 
-from brew_tui.ingredients import Malt, Hop, get_malts, get_hops, search_malts, search_hops
+from brew_tui.ingredients import (
+    Malt,
+    Hop,
+    get_malts,
+    get_hops,
+    search_malts,
+    search_hops,
+)
 
 
 def test_malt_fields():

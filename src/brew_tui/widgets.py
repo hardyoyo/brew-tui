@@ -1,6 +1,5 @@
 """Custom widgets for brew-tui."""
 
-
 from rich.text import Text
 from textual.reactive import reactive
 from textual.widget import Widget

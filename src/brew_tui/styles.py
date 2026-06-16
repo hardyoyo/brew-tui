@@ -1,6 +1,5 @@
 """BJCP style definitions, JSON loader, fallback data, and fuzzy search."""
 
-
 import json
 import logging
 from dataclasses import dataclass
@@ -89,7 +88,6 @@ def _parse_style(raw: dict) -> Optional[Style]:
     except KeyError:
         return None
 
-    fg = raw.get("final_gravity", {})
     abv = raw.get("alcohol_by_volume", {})
 
     return Style(
@@ -154,10 +152,7 @@ def search_styles(styles: List[Style], query: str) -> List[Style]:
     try:
         from rapidfuzz import fuzz
 
-        scored = [
-            (s, fuzz.partial_ratio(q, s.name.lower()))
-            for s in styles
-        ]
+        scored = [(s, fuzz.partial_ratio(q, s.name.lower())) for s in styles]
         scored.sort(key=lambda t: t[1], reverse=True)
         return [s for s, score in scored if score >= 65]
     except ImportError:
@@ -172,7 +167,10 @@ _FALLBACK_STYLES = [
         "category": "Standard American Beer",
         "style_id": "1A",
         "original_gravity": {"minimum": {"value": 1.028}, "maximum": {"value": 1.040}},
-        "international_bitterness_units": {"minimum": {"value": 8}, "maximum": {"value": 12}},
+        "international_bitterness_units": {
+            "minimum": {"value": 8},
+            "maximum": {"value": 12},
+        },
         "color": {"minimum": {"value": 2}, "maximum": {"value": 3}},
         "final_gravity": {"minimum": {"value": 0.998}, "maximum": {"value": 1.008}},
         "alcohol_by_volume": {"minimum": {"value": 2.8}, "maximum": {"value": 4.2}},
@@ -182,7 +180,10 @@ _FALLBACK_STYLES = [
         "category": "Standard American Beer",
         "style_id": "1B",
         "original_gravity": {"minimum": {"value": 1.040}, "maximum": {"value": 1.050}},
-        "international_bitterness_units": {"minimum": {"value": 8}, "maximum": {"value": 18}},
+        "international_bitterness_units": {
+            "minimum": {"value": 8},
+            "maximum": {"value": 18},
+        },
         "color": {"minimum": {"value": 2}, "maximum": {"value": 4}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.012}},
         "alcohol_by_volume": {"minimum": {"value": 4.2}, "maximum": {"value": 5.3}},
@@ -192,7 +193,10 @@ _FALLBACK_STYLES = [
         "category": "Czech Lager",
         "style_id": "3B",
         "original_gravity": {"minimum": {"value": 1.044}, "maximum": {"value": 1.060}},
-        "international_bitterness_units": {"minimum": {"value": 30}, "maximum": {"value": 45}},
+        "international_bitterness_units": {
+            "minimum": {"value": 30},
+            "maximum": {"value": 45},
+        },
         "color": {"minimum": {"value": 3.5}, "maximum": {"value": 6}},
         "final_gravity": {"minimum": {"value": 1.013}, "maximum": {"value": 1.017}},
         "alcohol_by_volume": {"minimum": {"value": 4.2}, "maximum": {"value": 5.8}},
@@ -202,7 +206,10 @@ _FALLBACK_STYLES = [
         "category": "German Lager",
         "style_id": "5D",
         "original_gravity": {"minimum": {"value": 1.044}, "maximum": {"value": 1.050}},
-        "international_bitterness_units": {"minimum": {"value": 22}, "maximum": {"value": 40}},
+        "international_bitterness_units": {
+            "minimum": {"value": 22},
+            "maximum": {"value": 40},
+        },
         "color": {"minimum": {"value": 2}, "maximum": {"value": 5}},
         "final_gravity": {"minimum": {"value": 1.006}, "maximum": {"value": 1.012}},
         "alcohol_by_volume": {"minimum": {"value": 4.4}, "maximum": {"value": 5.2}},
@@ -212,7 +219,10 @@ _FALLBACK_STYLES = [
         "category": "German Wheat Beer",
         "style_id": "10A",
         "original_gravity": {"minimum": {"value": 1.044}, "maximum": {"value": 1.052}},
-        "international_bitterness_units": {"minimum": {"value": 8}, "maximum": {"value": 15}},
+        "international_bitterness_units": {
+            "minimum": {"value": 8},
+            "maximum": {"value": 15},
+        },
         "color": {"minimum": {"value": 2}, "maximum": {"value": 6}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.014}},
         "alcohol_by_volume": {"minimum": {"value": 4.3}, "maximum": {"value": 5.6}},
@@ -222,7 +232,10 @@ _FALLBACK_STYLES = [
         "category": "British Pale Ale",
         "style_id": "11A",
         "original_gravity": {"minimum": {"value": 1.040}, "maximum": {"value": 1.055}},
-        "international_bitterness_units": {"minimum": {"value": 20}, "maximum": {"value": 40}},
+        "international_bitterness_units": {
+            "minimum": {"value": 20},
+            "maximum": {"value": 40},
+        },
         "color": {"minimum": {"value": 4}, "maximum": {"value": 11}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.015}},
         "alcohol_by_volume": {"minimum": {"value": 4.0}, "maximum": {"value": 5.5}},
@@ -232,7 +245,10 @@ _FALLBACK_STYLES = [
         "category": "Irish Beer",
         "style_id": "15B",
         "original_gravity": {"minimum": {"value": 1.036}, "maximum": {"value": 1.044}},
-        "international_bitterness_units": {"minimum": {"value": 25}, "maximum": {"value": 45}},
+        "international_bitterness_units": {
+            "minimum": {"value": 25},
+            "maximum": {"value": 45},
+        },
         "color": {"minimum": {"value": 25}, "maximum": {"value": 40}},
         "final_gravity": {"minimum": {"value": 1.007}, "maximum": {"value": 1.011}},
         "alcohol_by_volume": {"minimum": {"value": 3.8}, "maximum": {"value": 5.0}},
@@ -242,7 +258,10 @@ _FALLBACK_STYLES = [
         "category": "American Pale Ale",
         "style_id": "18B",
         "original_gravity": {"minimum": {"value": 1.045}, "maximum": {"value": 1.060}},
-        "international_bitterness_units": {"minimum": {"value": 30}, "maximum": {"value": 50}},
+        "international_bitterness_units": {
+            "minimum": {"value": 30},
+            "maximum": {"value": 50},
+        },
         "color": {"minimum": {"value": 5}, "maximum": {"value": 10}},
         "final_gravity": {"minimum": {"value": 1.010}, "maximum": {"value": 1.015}},
         "alcohol_by_volume": {"minimum": {"value": 4.5}, "maximum": {"value": 6.2}},
@@ -252,7 +271,10 @@ _FALLBACK_STYLES = [
         "category": "American Porter",
         "style_id": "20A",
         "original_gravity": {"minimum": {"value": 1.050}, "maximum": {"value": 1.070}},
-        "international_bitterness_units": {"minimum": {"value": 25}, "maximum": {"value": 50}},
+        "international_bitterness_units": {
+            "minimum": {"value": 25},
+            "maximum": {"value": 50},
+        },
         "color": {"minimum": {"value": 22}, "maximum": {"value": 40}},
         "final_gravity": {"minimum": {"value": 1.012}, "maximum": {"value": 1.018}},
         "alcohol_by_volume": {"minimum": {"value": 4.8}, "maximum": {"value": 6.5}},
@@ -262,7 +284,10 @@ _FALLBACK_STYLES = [
         "category": "American Stout",
         "style_id": "20C",
         "original_gravity": {"minimum": {"value": 1.050}, "maximum": {"value": 1.075}},
-        "international_bitterness_units": {"minimum": {"value": 35}, "maximum": {"value": 60}},
+        "international_bitterness_units": {
+            "minimum": {"value": 35},
+            "maximum": {"value": 60},
+        },
         "color": {"minimum": {"value": 30}, "maximum": {"value": 40}},
         "final_gravity": {"minimum": {"value": 1.010}, "maximum": {"value": 1.022}},
         "alcohol_by_volume": {"minimum": {"value": 5.0}, "maximum": {"value": 7.0}},
@@ -272,7 +297,10 @@ _FALLBACK_STYLES = [
         "category": "IPA",
         "style_id": "21A",
         "original_gravity": {"minimum": {"value": 1.050}, "maximum": {"value": 1.070}},
-        "international_bitterness_units": {"minimum": {"value": 40}, "maximum": {"value": 70}},
+        "international_bitterness_units": {
+            "minimum": {"value": 40},
+            "maximum": {"value": 70},
+        },
         "color": {"minimum": {"value": 6}, "maximum": {"value": 14}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.015}},
         "alcohol_by_volume": {"minimum": {"value": 5.5}, "maximum": {"value": 7.5}},
@@ -282,7 +310,10 @@ _FALLBACK_STYLES = [
         "category": "IPA",
         "style_id": "22A",
         "original_gravity": {"minimum": {"value": 1.060}, "maximum": {"value": 1.080}},
-        "international_bitterness_units": {"minimum": {"value": 60}, "maximum": {"value": 100}},
+        "international_bitterness_units": {
+            "minimum": {"value": 60},
+            "maximum": {"value": 100},
+        },
         "color": {"minimum": {"value": 6}, "maximum": {"value": 14}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.018}},
         "alcohol_by_volume": {"minimum": {"value": 6.5}, "maximum": {"value": 9.0}},
@@ -292,7 +323,10 @@ _FALLBACK_STYLES = [
         "category": "Strong American Ale",
         "style_id": "22C",
         "original_gravity": {"minimum": {"value": 1.075}, "maximum": {"value": 1.115}},
-        "international_bitterness_units": {"minimum": {"value": 50}, "maximum": {"value": 90}},
+        "international_bitterness_units": {
+            "minimum": {"value": 50},
+            "maximum": {"value": 90},
+        },
         "color": {"minimum": {"value": 30}, "maximum": {"value": 40}},
         "final_gravity": {"minimum": {"value": 1.018}, "maximum": {"value": 1.030}},
         "alcohol_by_volume": {"minimum": {"value": 8.0}, "maximum": {"value": 14.0}},
@@ -302,7 +336,10 @@ _FALLBACK_STYLES = [
         "category": "French and Belgian Ale",
         "style_id": "25B",
         "original_gravity": {"minimum": {"value": 1.048}, "maximum": {"value": 1.065}},
-        "international_bitterness_units": {"minimum": {"value": 20}, "maximum": {"value": 35}},
+        "international_bitterness_units": {
+            "minimum": {"value": 20},
+            "maximum": {"value": 35},
+        },
         "color": {"minimum": {"value": 5}, "maximum": {"value": 14}},
         "final_gravity": {"minimum": {"value": 1.002}, "maximum": {"value": 1.008}},
         "alcohol_by_volume": {"minimum": {"value": 5.0}, "maximum": {"value": 7.0}},
@@ -312,7 +349,10 @@ _FALLBACK_STYLES = [
         "category": "Belgian Strong Ale",
         "style_id": "26B",
         "original_gravity": {"minimum": {"value": 1.054}, "maximum": {"value": 1.068}},
-        "international_bitterness_units": {"minimum": {"value": 15}, "maximum": {"value": 25}},
+        "international_bitterness_units": {
+            "minimum": {"value": 15},
+            "maximum": {"value": 25},
+        },
         "color": {"minimum": {"value": 10}, "maximum": {"value": 17}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.018}},
         "alcohol_by_volume": {"minimum": {"value": 6.0}, "maximum": {"value": 7.6}},
@@ -322,7 +362,10 @@ _FALLBACK_STYLES = [
         "category": "Belgian Strong Ale",
         "style_id": "26C",
         "original_gravity": {"minimum": {"value": 1.070}, "maximum": {"value": 1.085}},
-        "international_bitterness_units": {"minimum": {"value": 18}, "maximum": {"value": 40}},
+        "international_bitterness_units": {
+            "minimum": {"value": 18},
+            "maximum": {"value": 40},
+        },
         "color": {"minimum": {"value": 4.5}, "maximum": {"value": 7}},
         "final_gravity": {"minimum": {"value": 1.008}, "maximum": {"value": 1.018}},
         "alcohol_by_volume": {"minimum": {"value": 7.5}, "maximum": {"value": 10.5}},

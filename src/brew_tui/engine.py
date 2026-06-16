@@ -84,7 +84,7 @@ def calculate_srm_from_mcu(mcu: float) -> float:
     Guards: if MCU <= 0 return 0.0 to prevent domain errors."""
     if mcu is None or mcu <= 0.0:
         return 0.0
-    return round(1.4922 * (mcu ** 0.6859), 2)
+    return round(1.4922 * (mcu**0.6859), 2)
 
 
 def calculate_srm(

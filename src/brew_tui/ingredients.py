@@ -1,6 +1,5 @@
 """Bundled common malt and hop data with fuzzy search."""
 
-
 from dataclasses import dataclass
 from typing import List
 
@@ -117,6 +116,7 @@ def _fuzzy_score(
 ) -> List[tuple[object, int]]:
     try:
         from rapidfuzz import fuzz
+
         scored = [(obj, fuzz.partial_ratio(query, name.lower())) for name, obj in items]
         scored.sort(key=lambda t: t[1], reverse=True)
         return scored

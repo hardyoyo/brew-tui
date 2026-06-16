@@ -1,7 +1,6 @@
 """Unit tests for brew_tui.config."""
 
 import json
-from pathlib import Path
 
 from brew_tui.config import BrewConfig, DEFAULT_RECIPE_DIR
 

@@ -1,12 +1,10 @@
 """Tests for BJCP style loading, parsing, and searching."""
 
-import json
 import pytest
-from pathlib import Path
 from brew_tui.styles import Style, load_styles, search_styles
 
-
 # ── Style dataclass & methods ──────────────────────────────────────
+
 
 class TestStyle:
     def test_create_and_repr(self):
@@ -14,10 +12,14 @@ class TestStyle:
             name="American IPA",
             category="IPA",
             style_id="21A",
-            og_min=1.050, og_max=1.070,
-            ibu_min=40, ibu_max=70,
-            srm_min=6, srm_max=14,
-            abv_min=5.5, abv_max=7.5,
+            og_min=1.050,
+            og_max=1.070,
+            ibu_min=40,
+            ibu_max=70,
+            srm_min=6,
+            srm_max=14,
+            abv_min=5.5,
+            abv_max=7.5,
         )
         assert s.name == "American IPA"
         assert s.style_id == "21A"
@@ -57,6 +59,7 @@ class TestStyle:
 
 # ── Full JSON parsing ──────────────────────────────────────────────
 
+
 class TestLoadStylesFromFile:
     def test_loads_all_styles(self):
         styles = load_styles()
@@ -89,6 +92,7 @@ class TestLoadStylesFromFile:
 
 # ── Fallback loader ────────────────────────────────────────────────
 
+
 class TestFallbackLoader:
     def test_fallback_not_empty(self):
         styles = load_styles(data_dir="/nonexistent/path")
@@ -102,6 +106,7 @@ class TestFallbackLoader:
 
 
 # ── Fuzzy search ──────────────────────────────────────────────────
+
 
 class TestSearchStyles:
     def test_fuzzy_search_ipa(self):
@@ -129,13 +134,18 @@ class TestSearchStyles:
 
 # ── Helpers ────────────────────────────────────────────────────────
 
+
 def _dummy() -> Style:
     return Style(
         name="American IPA",
         category="IPA",
         style_id="21A",
-        og_min=1.050, og_max=1.070,
-        ibu_min=40, ibu_max=70,
-        srm_min=6, srm_max=14,
-        abv_min=5.5, abv_max=7.5,
+        og_min=1.050,
+        og_max=1.070,
+        ibu_min=40,
+        ibu_max=70,
+        srm_min=6,
+        srm_max=14,
+        abv_min=5.5,
+        abv_max=7.5,
     )

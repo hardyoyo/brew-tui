@@ -4,7 +4,6 @@ Walks the user through building their ingredient inventory
 with friendly prompts and parsing.
 """
 
-
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -18,7 +17,6 @@ from .inventory import (
     STAGE_WELCOME,
     Inventory,
 )
-
 
 INVENTORY_FILE = Path.home() / ".brew-tui-recipes" / INVENTORY_FILENAME
 

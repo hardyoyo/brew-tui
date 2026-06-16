@@ -11,8 +11,8 @@ from brew_tui.engine import (
     DEFAULT_BASE_MALT_PPG,
 )
 
-
 # ── _to_float guards ──────────────────────────────────────────────
+
 
 class TestToFloat:
     def test_numeric_string(self):
@@ -43,6 +43,7 @@ class TestToFloat:
 
 
 # ── OG ────────────────────────────────────────────────────────────
+
 
 class TestCalculateOG:
     def test_single_base_malt(self):
@@ -95,6 +96,7 @@ class TestCalculateOG:
 
 # ── MCU & SRM ─────────────────────────────────────────────────────
 
+
 class TestCalculateMCU:
     def test_single_malt(self):
         """5 kg malt at 10 L in 20 L batch."""
@@ -142,6 +144,7 @@ class TestCalculateSRM:
 
 
 # ── IBU ───────────────────────────────────────────────────────────
+
 
 class TestCalculateIBU:
     def test_standard(self):

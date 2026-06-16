@@ -1,13 +1,22 @@
 """Main Textual TUI application for brew-tui."""
 
-
 from pathlib import Path
 from typing import List, Optional
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
-from textual.widgets import Button, Header, Footer, Input, Label, ListItem, ListView, Select, Static
+from textual.widgets import (
+    Button,
+    Header,
+    Footer,
+    Input,
+    Label,
+    ListItem,
+    ListView,
+    Select,
+    Static,
+)
 
 from .config import BrewConfig
 from .engine import _to_float, calculate_og, calculate_srm, calculate_ibu
@@ -32,15 +41,15 @@ class BrewTUI(App):
         self._config = config or BrewConfig.load()
 
     # ── input reactives ──────────────────────────────────────────────
-    batch_size_l       = reactive(20.0)
-    base_malt_kg       = reactive(5.0)
-    spec_malt_kg       = reactive(0.0)
+    batch_size_l = reactive(20.0)
+    base_malt_kg = reactive(5.0)
+    spec_malt_kg = reactive(0.0)
     spec_malt_lovibond = reactive(10.0)
-    hop_weight_g       = reactive(30.0)
-    alpha_acid_pct     = reactive(5.0)
+    hop_weight_g = reactive(30.0)
+    alpha_acid_pct = reactive(5.0)
 
     # ── result reactives ─────────────────────────────────────────────
-    og  = reactive(0.0)
+    og = reactive(0.0)
     srm = reactive(0.0)
     ibu = reactive(0.0)
 
@@ -113,9 +122,10 @@ class BrewTUI(App):
         self._inventory = Inventory.load(
             Path(self._config.recipe_path) / INVENTORY_FILENAME
         )
-        if not self._inventory.nonempty and (
-            Path(self._config.recipe_path) / INVENTORY_FILENAME
-        ).exists():
+        if (
+            not self._inventory.nonempty
+            and (Path(self._config.recipe_path) / INVENTORY_FILENAME).exists()
+        ):
             self.notify(
                 "Inventory file was corrupted — starting fresh",
                 severity="warning",

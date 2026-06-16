@@ -4,16 +4,15 @@ Reads/writes a JSON config file under XDG_CONFIG_HOME.
 Auto-generates default config on first run.
 """
 
-
 import json
 import os
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Self
 
-CONFIG_DIR = Path(
-    os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")
-) / "brew-tui"
+CONFIG_DIR = (
+    Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "brew-tui"
+)
 CONFIG_FILE = CONFIG_DIR / "config.json"
 DEFAULT_RECIPE_DIR = Path.home() / ".brew-tui-recipes"
 

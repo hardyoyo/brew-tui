@@ -1,8 +1,5 @@
 """Tests for brew_tui.inventory data model and parsers."""
 
-import json
-from pathlib import Path
-
 from brew_tui.inventory import (
     INVENTORY_FILENAME,
     MaltItem,
