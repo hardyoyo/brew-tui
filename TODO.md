@@ -67,3 +67,6 @@
 - [x] Snackbar notifications for corrupt inventory, missing style data, theme changes, saved inventory
 - [x] `pyproject.toml` entry point — `brew-tui` console script
 - [x] Final integration test: set all values, select style, verify gauges and displays
+
+## Future
+- [ ] Screenshots in docs/ and README
