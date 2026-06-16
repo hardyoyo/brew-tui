@@ -1,6 +1,5 @@
 """Custom widgets for brew-tui."""
 
-from __future__ import annotations
 
 from rich.text import Text
 from textual.reactive import reactive

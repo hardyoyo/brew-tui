@@ -2,30 +2,32 @@
 
 An interactive homebrew recipe helper that runs in your terminal.
 
-Built with [Textual](https://textual.textualize.io/). Type in ingredients and see live OG, SRM, and IBU gauges against BJCP style guidelines.
+Built with [Textual](https://textual.textualize.io/). Type in ingredients
+and see live OG, SRM, and IBU gauges against BJCP style guidelines.
+
+![screenshot](https://img.shields.io/badge/license-BSD%200--Clause-blue)
 
 ## Quick Start
 
 ```bash
 pip install -e .
-python -m brew_tui
+brew-tui
 ```
 
 ## Features
 
-- **Live calculation engine** — Original Gravity (OG), SRM color, and IBU bitterness update as you type
-- **BJCP style dashboard** — fuzzy-search through official style guidelines; see your recipe's position relative to style brackets
-- **Visual gauges** — colour-coded progress bars show below/in/above range at a glance
-- **Ingredient inventory** — fuzzy-searchable lists of common malts and hops
-- **Crash-safe** — empty or zero inputs are handled gracefully (no division-by-zero)
+- **Live calculation** — OG, SRM, and IBU update as you type
+- **BJCP style dashboard** — fuzzy-search official style guidelines; see where your recipe lands
+- **Visual gauges** — colour-coded bars show below/in/above range at a glance
+- **Ingredient browser** — fuzzy-search 29 malts and 26 hops; auto-fill Lovibond and AA%
+- **Inventory wizard** — `Ctrl+I` for a conversational interview that builds your personal ingredient stash
+- **Theme system** — pick from all built-in Textual themes via dropdown or `Ctrl+T`
+- **Config file** — JSON config at `~/.config/brew-tui/config.json`, auto-generated on first run
+- **Crash-safe** — empty or zero inputs are handled gracefully
 
-## Formulas
+## Documentation
 
-| Metric | Formula |
-|---|---|
-| OG | `SG = 1 + Σ(kg × 2.20462 × PPG × eff) / (L × 0.264172) / 1000` |
-| SRM | `MCU = Σ(lb × L) / gal` → `SRM = 1.4922 × MCU^0.6859` |
-| IBU | `IBU = g_hop × (AA%/100) × util × 1000 / L` (util = 0.24) |
+- [Full usage guide](docs/usage.md) — inputs, style dashboard, gauges, ingredient browser, inventory builder, themes, config, keybindings, formulas
 
 ## Development
 

@@ -37,13 +37,33 @@
 - [x] Gauges reactively update min/max on style change AND value on recipe change
 - [x] 10 app integration tests (55 total): compose, input update, zero/empty, style list, filter, selection, gauges
 
-## 🔲 Phase 4: Ingredient Inventory Browser
-- [ ] Bundled common malts (name, PPG, Lovibond) and hops (name, typical AA%)
-- [ ] Fuzzy-searchable selection list
-- [ ] On select, auto-fill the ingredient fields
+## ✅ Phase 4: Config & Theme System (Done)
+- [x] `BrewConfig` dataclass with `load()` / `save()` — JSON config under `$XDG_CONFIG_HOME/brew-tui/`
+- [x] Auto-generates default config file on first run
+- [x] Configurable recipe storage path (default: `~/.brew-tui-recipes/`)
+- [x] `Ctrl+T` keybinding to cycle through all built-in Textual themes
+- [x] Theme `Select` dropdown in the Settings section (right pane)
+- [x] Theme change is persisted to config file immediately
+- [x] 6 config unit tests (61 total): load, save, corrupted file, custom path, persistence
+- [x] 3 theme integration tests (64 total): selector present, theme change, recipe path
 
-## 🔲 Phase 5: Polish & Packaging
-- [ ] CSS styling for a clean TUI look
-- [ ] Error/snackbar for network failure
-- [ ] `pyproject.toml` entry point
-- [ ] Final integration test: launch app, type values, verify gauge updates
+## ✅ Phase 5: Ingredient Inventory Browser (Done)
+- [x] Bundled 29 common malts (name, PPG, Lovibond) and 26 hops (name, typical AA%)
+- [x] `Malt` / `Hop` dataclasses with `search_malts()` / `search_hops()` fuzzy search
+- [x] Fuzzy-searchable lists with filter Inputs in the left pane
+- [x] Selecting a malt auto-fills the Spec Malt Lovibond field
+- [x] Selecting a hop auto-fills the Alpha Acid field
+- [x] 9 ingredient unit tests (73 total): dataclass, data loading, substring/fuzzy search
+- [x] 6 ingredient integration tests (79 total): lists populated, filters, auto-fill
+
+## ✅ Phase 6: Polish & Packaging (Done)
+- [x] Conversational inventory builder (`Ctrl+I` / "Build Inventory" button)
+- [x] Friendly interview flow: malts → hops → yeast → specialty grains
+- [x] Parsing `name:amount` format for each category
+- [x] Inventory persisted to `~/.brew-tui-recipes/inventory.json`
+- [x] Inventory items appear in browser lists with `[I]` prefix
+- [x] 17 inventory unit tests (97 total): data model, save/load, parsers
+- [x] CSS styling — theme-aware `$` variables, focus states, input borders, scrollable left pane
+- [x] Snackbar notifications for corrupt inventory, missing style data, theme changes, saved inventory
+- [x] `pyproject.toml` entry point — `brew-tui` console script
+- [x] Final integration test: set all values, select style, verify gauges and displays

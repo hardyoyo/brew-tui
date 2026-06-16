@@ -1,5 +1,5 @@
 Screen {
-    background: #1c1c1e;
+    background: $surface;
 }
 
 #main {
@@ -8,58 +8,108 @@ Screen {
 }
 
 #left-pane {
-    width: 38;
+    width: 40;
     padding: 1 2;
     border: solid $primary;
-    background: #232326;
+    background: $surface;
+    overflow-y: auto;
 }
 
 #right-pane {
     width: 1fr;
     padding: 1 2;
     border: solid $secondary;
-    background: #232326;
+    background: $surface;
 }
 
 Label {
     margin: 1 0 0 0;
-    color: #d4be98;
+    color: $text;
     text-style: bold;
 }
 
 Input {
     margin: 0 0 1 0;
-    background: #2c2c30;
-    color: #ebdbb2;
+    background: $boost;
+    color: $text;
+    border: none;
 }
 
-#style-header, #dashboard-header {
+Input:focus {
+    background: $surface;
+    border: tall $accent;
+}
+
+#style-header, #settings-header, #dashboard-header,
+#malt-header, #hop-header {
     content-align: center top;
     text-style: bold;
     color: $primary;
-    margin: 0 0 1 0;
+    margin: 1 0 1 0;
 }
 
 #style-list {
     height: 6;
     max-height: 6;
-    border: solid $secondary;
+    border: solid $surface;
     margin: 0 0 1 0;
 }
 
 #style-info {
     margin: 0 0 1 0;
     padding: 0 1;
-    color: #ebdbb2;
+    color: $text;
 }
 
 #og-display, #srm-display, #ibu-display {
     margin: 1 0 0 0;
     padding: 0 1;
-    color: #ebdbb2;
+    color: $text;
 }
 
 GaugeBar {
     height: 1;
     margin: 0 0 1 1;
+}
+
+#theme-select {
+    margin: 0 0 1 0;
+}
+
+Button {
+    margin: 0 0 1 0;
+}
+
+InventoryScreen {
+    background: $surface;
+}
+
+#conv-log {
+    height: 1fr;
+    margin: 1 2;
+    border: solid $primary;
+    padding: 0 1;
+    background: $boost;
+}
+
+#conv-input {
+    margin: 0 2 1 2;
+}
+
+#malt-list, #hop-list {
+    height: 4;
+    max-height: 4;
+    border: solid $surface;
+    margin: 0 0 1 0;
+}
+
+Select {
+    background: $boost;
+    color: $text;
+    border: none;
+}
+
+Select:focus {
+    background: $surface;
+    border: tall $accent;
 }
