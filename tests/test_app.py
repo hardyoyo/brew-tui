@@ -1,7 +1,7 @@
 """Integration / smoke tests for the Textual TUI app."""
 
 import pytest
-from textual.widgets import Input, ListView, Select, Static
+from textual.widgets import Input, Label, ListView, Select, Static
 from brew_tui.app import BrewTUI, MaltAddition, HopAddition
 from brew_tui.units import lb_to_kg
 
@@ -449,3 +449,50 @@ async def test_is_valid_float():
         assert not app._is_valid_float("abc")
         assert not app._is_valid_float("1.2.3")
         assert not app._is_valid_float(None)
+
+
+@pytest.mark.asyncio
+async def test_toggle_units_imperial_to_metric_and_back():
+    """Ctrl+U toggles between imperial and metric with live conversion."""
+    from brew_tui.config import BrewConfig
+
+    cfg = BrewConfig(theme="textual-dark", unit_system="imperial")
+    app = BrewTUI(config=cfg)
+    async with app.run_test(headless=True, size=(120, 30)) as pilot:
+        await pilot.pause()
+
+        assert app._config.unit_system == "imperial"
+        assert app._imperial() is True
+        label = app.query_one("#batch-size-label", Label)
+        assert "gal" in str(label.render())
+
+        inp = app.query_one("#batch-size", Input)
+        assert inp.value == "5.0"
+
+        batch_l_before = app.batch_size_l
+
+        app.action_toggle_units()
+        await pilot.pause()
+
+        assert app._config.unit_system == "metric"
+        assert app._imperial() is False
+        label = app.query_one("#batch-size-label", Label)
+        assert "L" in str(label.render())
+
+        inp = app.query_one("#batch-size", Input)
+        assert float(inp.value) == pytest.approx(batch_l_before, rel=1e-2)
+
+        assert app.batch_size_l == pytest.approx(batch_l_before, rel=1e-2)
+
+        app.action_toggle_units()
+        await pilot.pause()
+
+        assert app._config.unit_system == "imperial"
+        assert app._imperial() is True
+        label = app.query_one("#batch-size-label", Label)
+        assert "gal" in str(label.render())
+
+        inp = app.query_one("#batch-size", Input)
+        assert inp.value == "5.0"
+
+        assert app.batch_size_l == pytest.approx(batch_l_before)
