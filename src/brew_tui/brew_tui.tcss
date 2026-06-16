@@ -220,3 +220,39 @@ InventoryEditScreen {
 #ei-delete-all {
     margin: 1 0 0 0;
 }
+
+SaveAsScreen, OpenRecipeScreen {
+    background: $surface;
+    align: center middle;
+}
+
+#sas-prompt, #ors-prompt {
+    margin: 1 2;
+    color: $text;
+    text-style: bold;
+    content-align: center top;
+}
+
+#sas-input {
+    margin: 0 2 1 2;
+}
+
+#sas-btns {
+    align: center middle;
+    margin: 0 2;
+}
+
+#sas-btns Button {
+    margin: 0 1;
+    min-width: 12;
+}
+
+#ors-list {
+    height: 12;
+    margin: 0 2 1 2;
+    border: solid $primary;
+}
+
+#ors-cancel {
+    margin: 0 2 1 2;
+}

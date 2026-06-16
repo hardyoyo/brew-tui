@@ -85,8 +85,32 @@
 - [x] Taller malt/hop/style lists (6 rows), right pane scrollable
 - [x] 16 new tests (114 total): ABV, Tinseth util, multi-IBU, Style FG/ABV, dynamic additions
 
-## Future
+## ✅ Phase 8: UX Polish (Done)
 - [x] Screenshots in docs/ and README
-- [ ] Input validation feedback (visual indicator on parse failure)
-- [ ] Inventory edit/delete capability
-- [ ] Responsive left pane width
+- [x] Input validation feedback (red border on parse failure)
+- [x] Input value bounds/clamping (batch, FG, efficiency, weights, times)
+- [x] Inventory edit/delete screen (view, remove items, delete all)
+- [x] Keyboard shortcuts: ctrl+f (style search), ctrl+e (edit inventory)
+- [x] Responsive left pane width: 38% with min/max constraints
+- [x] Release target: `make release TAG=v0.x.y`
+- [x] v0.1-alpha tagged and pushed
+- [x] 124 tests total, lint clean, CI passing
+
+## ✅ Phase 9: Multi-Recipe Storage (Done)
+- [x] Named recipe save/load with dialog screens
+- [x] Open screen lists all saved recipes, select to load
+- [x] Sanitized filenames with conflict-free naming
+- [x] `_current_recipe_name` tracking for overwrite-on-re-save
+- [x] Recipe files stored in `config.recipe_path/{name}.json`
+- [x] 6 new tests (130 total), lint clean
+
+## Future
+- [ ] Refactor to support imperial units (gallon, lb, oz) and make them the default
+- [ ] Two-column malt/hop rows on wider terminals
+- [ ] Tap water / mineral profile inputs
+- [ ] Mash temperature steps
+- [ ] Hydrometer correction / temperature compensation
+- [ ] Export recipe to BeerXML / text / markdown
+- [ ] Pull recipes from remote repositories (Brewers Friend API + BeerXML import)
+- [ ] Style comparison side-by-side
+- [ ] Recipe scaling (batch size only, or full %) 

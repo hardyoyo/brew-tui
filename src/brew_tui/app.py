@@ -30,6 +30,7 @@ from .ingredients import Malt, Hop, get_malts, get_hops, search_malts, search_ho
 from .inventory import inventory_path, Inventory
 from .inventory_edit_screen import InventoryEditScreen
 from .inventory_screen import InventoryScreen
+from .recipe_io_screen import OpenRecipeScreen, SaveAsScreen
 from .styles import DATA_DIR, DATA_FILE, Style, load_styles, search_styles
 from .widgets import GaugeBar
 
@@ -141,6 +142,7 @@ class BrewTUI(App):
     _all_hops: List[Hop] = []
     _malt_additions: List[MaltAddition] = []
     _hop_additions: List[HopAddition] = []
+    _current_recipe_name: Optional[str] = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -174,8 +176,8 @@ class BrewTUI(App):
                 yield Label("Theme")
                 yield Select([], id="theme-select", prompt="Select theme...")
                 yield Button("New Recipe", id="btn-new-recipe")
-                yield Button("Save Recipe", id="btn-save", variant="primary")
-                yield Button("Load Recipe", id="btn-load")
+                yield Button("Save As...", id="btn-save-as", variant="primary")
+                yield Button("Open...", id="btn-open")
                 yield Button("Build Inventory", id="btn-inventory", variant="primary")
                 yield Button("Edit Inventory", id="btn-edit-inventory")
 
@@ -453,11 +455,11 @@ class BrewTUI(App):
         elif btn_id == "btn-new-recipe":
             self.action_new_recipe()
 
-        elif btn_id == "btn-save":
-            self._save_recipe()
+        elif btn_id == "btn-save-as":
+            self.action_save_recipe_as()
 
-        elif btn_id == "btn-load":
-            self._load_recipe()
+        elif btn_id == "btn-open":
+            self.action_open_recipe()
 
     def action_open_inventory(self) -> None:
         self.push_screen(
@@ -507,6 +509,7 @@ class BrewTUI(App):
     def action_new_recipe(self) -> None:
         self._malt_additions.clear()
         self._hop_additions.clear()
+        self._current_recipe_name = None
         self.batch_size_l = 20.0
         self.fg_estimate = 1.010
         self.mash_efficiency_pct = 75.0
@@ -519,8 +522,63 @@ class BrewTUI(App):
         self._require_recalc()
         self.notify("New recipe started", timeout=3)
 
-    def _save_recipe(self) -> None:
-        recipe = {
+    def action_save_recipe_as(self) -> None:
+        self.push_screen(
+            SaveAsScreen(self._config.recipe_path, self._current_recipe_name),
+            self._on_save_name,
+        )
+
+    def _on_save_name(self, name: str | None) -> None:
+        if name is None:
+            return
+        self._current_recipe_name = name
+        recipe = self._build_recipe_dict()
+        path = Path(self._config.recipe_path) / f"{name}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(recipe, f, indent=2)
+        self.notify(f"Saved: {name}", timeout=3)
+
+    def action_open_recipe(self) -> None:
+        self.push_screen(
+            OpenRecipeScreen(self._config.recipe_path),
+            self._on_open_name,
+        )
+
+    def _on_open_name(self, name: str | None) -> None:
+        if name is None:
+            return
+        path = Path(self._config.recipe_path) / f"{name}.json"
+        if not path.is_file():
+            self.notify(f"Recipe not found: {name}", severity="warning", timeout=3)
+            return
+        with open(path) as f:
+            recipe = json.load(f)
+
+        MaltAddition.__next_uid = 0
+        HopAddition.__next_uid = 0
+
+        self._current_recipe_name = name
+        self.batch_size_l = recipe.get("batch_size_l", 20.0)
+        self.fg_estimate = recipe.get("fg_estimate", 1.010)
+        self.mash_efficiency_pct = recipe.get("mash_efficiency_pct", 75.0)
+        self._malt_additions = [
+            MaltAddition(**a) for a in recipe.get("malt_additions", [])
+        ]
+        self._hop_additions = [
+            HopAddition(**a) for a in recipe.get("hop_additions", [])
+        ]
+
+        self.query_one("#batch-size", Input).value = str(self.batch_size_l)
+        self.query_one("#fg-estimate", Input).value = str(self.fg_estimate)
+        self.query_one("#mash-efficiency", Input).value = str(self.mash_efficiency_pct)
+        self._rebuild_malt_ui()
+        self._rebuild_hop_ui()
+        self._require_recalc()
+        self.notify(f"Loaded: {name}", timeout=3)
+
+    def _build_recipe_dict(self) -> dict:
+        return {
             "version": 1,
             "batch_size_l": self.batch_size_l,
             "fg_estimate": self.fg_estimate,
@@ -544,44 +602,6 @@ class BrewTUI(App):
                 for a in self._hop_additions
             ],
         }
-        path = Path(self._config.recipe_path) / "recipe.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w") as f:
-            json.dump(recipe, f, indent=2)
-        self.notify("Recipe saved", timeout=3)
-
-    def _load_recipe(self) -> None:
-        path = Path(self._config.recipe_path) / "recipe.json"
-        if not path.is_file():
-            self.notify(
-                "No saved recipe found",
-                severity="warning",
-                timeout=3,
-            )
-            return
-        with open(path) as f:
-            recipe = json.load(f)
-
-        MaltAddition.__next_uid = 0
-        HopAddition.__next_uid = 0
-
-        self.batch_size_l = recipe.get("batch_size_l", 20.0)
-        self.fg_estimate = recipe.get("fg_estimate", 1.010)
-        self.mash_efficiency_pct = recipe.get("mash_efficiency_pct", 75.0)
-        self._malt_additions = [
-            MaltAddition(**a) for a in recipe.get("malt_additions", [])
-        ]
-        self._hop_additions = [
-            HopAddition(**a) for a in recipe.get("hop_additions", [])
-        ]
-
-        self.query_one("#batch-size", Input).value = str(self.batch_size_l)
-        self.query_one("#fg-estimate", Input).value = str(self.fg_estimate)
-        self.query_one("#mash-efficiency", Input).value = str(self.mash_efficiency_pct)
-        self._rebuild_malt_ui()
-        self._rebuild_hop_ui()
-        self._require_recalc()
-        self.notify("Recipe loaded", timeout=3)
 
     # ── Theme ────────────────────────────────────────────────────
 
