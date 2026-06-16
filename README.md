@@ -5,7 +5,8 @@ An interactive homebrew recipe helper that runs in your terminal.
 Built with [Textual](https://textual.textualize.io/). Type in ingredients
 and see live OG, SRM, and IBU gauges against BJCP style guidelines.
 
-![screenshot](https://img.shields.io/badge/license-BSD%200--Clause-blue)
+[![CI](https://github.com/hardyoyo/brew-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/hardyoyo/brew-tui/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-BSD%200--Clause-blue)](https://opensource.org/licenses/0BSD)
 
 ## Quick Start
 
