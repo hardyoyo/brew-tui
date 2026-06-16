@@ -1,4 +1,4 @@
-.PHONY: install install-dev test lint format clean screenshots
+.PHONY: install install-dev test lint format clean screenshots release
 
 install:
 	pip install -e .
@@ -36,3 +36,15 @@ screenshots:
 		--export-filename=docs/images/screenshot-inventory.png \
 		--export-background=black 2>/dev/null || true
 	@echo "Screenshots: docs/images/screenshot-*.png"
+
+release:
+	@if [ -z "$(TAG)" ]; then echo "Usage: make release TAG=v0.x.y"; exit 1; fi
+	@if [ "$(shell git rev-parse --abbrev-ref HEAD)" != "main" ]; then \
+		echo "Must be on main branch"; exit 1; fi
+	@if [ -n "$(shell git status --porcelain)" ]; then \
+		echo "Uncommitted changes"; exit 1; fi
+	make lint
+	make test
+	git tag -a "$(TAG)" -m "Release $(TAG)"
+	git push origin "$(TAG)"
+	@echo "Tagged and pushed $(TAG)"
