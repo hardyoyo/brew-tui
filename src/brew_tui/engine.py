@@ -1,15 +1,14 @@
-"""Calculation engine for brew-tui recipe helper.
+"""Calculation engine for brew-tui recipe helper."""
 
-Provides OG, SRM, and IBU calculations with input-safety guards.
-"""
-
+import math
 from typing import List, Optional
 
 DEFAULT_BASE_MALT_PPG = 37.0
 DEFAULT_MASH_EFFICIENCY = 0.75
-TINSETH_UTILIZATION = 0.24  # simplified 60-min boil utilization
+TINSETH_UTILIZATION = 0.24
 MOREY_COEFF = 1.4922
 MOREY_EXP = 0.6859
+ABV_FACTOR = 131.25
 
 KG_PER_LB = 2.20462
 L_PER_GAL = 0.264172
@@ -18,8 +17,6 @@ FALLBACK_SAFE = 1.0
 
 
 def _to_float(value, fallback=FALLBACK_SAFE) -> float:
-    """Safely convert a value to float, returning *fallback* on
-    None, empty string, zero, or non-numeric input."""
     if value is None:
         return fallback
     if isinstance(value, str) and value.strip() == "":
@@ -39,13 +36,6 @@ def calculate_og(
     efficiency: float = DEFAULT_MASH_EFFICIENCY,
     potentials_ppg: Optional[List[float]] = None,
 ) -> float:
-    """Calculate Original Gravity using PPG-based formula.
-
-    SG = 1 + sum(malt_kg * 2.20462 * ppg * efficiency)
-            / (batch_L * 0.264172) / 1000
-
-    Returns OG as specific gravity (e.g. 1.050).
-    """
     batch_l = _to_float(batch_size_l)
     if potentials_ppg is None:
         potentials_ppg = [DEFAULT_BASE_MALT_PPG] * len(malt_weights_kg)
@@ -65,7 +55,6 @@ def calculate_mcu(
     malt_lovibonds: List[float],
     batch_size_l: float,
 ) -> float:
-    """Malt Colour Units via MCU = sum(malt_lb * lovibond) / vol_gal."""
     batch_l = _to_float(batch_size_l)
     total_mcu = 0.0
     for weight_kg, lovibond in zip(malt_weights_kg, malt_lovibonds):
@@ -77,11 +66,6 @@ def calculate_mcu(
 
 
 def calculate_srm_from_mcu(mcu: float) -> float:
-    """Convert MCU to SRM via the Morey equation.
-
-    SRM = 1.4922 * (MCU ** 0.6859)
-
-    Guards: if MCU <= 0 return 0.0 to prevent domain errors."""
     if mcu is None or mcu <= 0.0:
         return 0.0
     return round(1.4922 * (mcu**0.6859), 2)
@@ -92,7 +76,6 @@ def calculate_srm(
     malt_lovibonds: List[float],
     batch_size_l: float,
 ) -> float:
-    """Convenience: compute MCU then SRM."""
     mcu = calculate_mcu(malt_weights_kg, malt_lovibonds, batch_size_l)
     return calculate_srm_from_mcu(mcu)
 
@@ -103,16 +86,34 @@ def calculate_ibu(
     batch_size_l: float,
     utilization: float = TINSETH_UTILIZATION,
 ) -> float:
-    """Calculate IBU using a simplified Tinseth formula.
-
-    IBU = (hop_g * AA_decimal * utilization * 1000) / batch_L
-
-    *alpha_acid_pct* is a percentage (e.g. 5.0 for 5% AA).
-    *utilization* is a decimal (default 0.24 for 60-min boil).
-    The factor 1000 handles US-to-metric unit conversion.
-    """
     batch_l = _to_float(batch_size_l)
     hop_w = _to_float(hop_weight_g, 0.0)
     aa_decimal = alpha_acid_pct / 100.0
     ibu = (hop_w * aa_decimal * utilization * 1000.0) / batch_l
     return round(ibu, 1)
+
+
+def calculate_abv(og: float, fg: float = 1.010) -> float:
+    if og <= 0.0 or fg <= 0.0 or fg >= og:
+        return 0.0
+    return round((og - fg) * ABV_FACTOR, 2)
+
+
+def tinseth_utilization(boil_time_min: float, sg_estimate: float = 1.050) -> float:
+    if boil_time_min <= 0:
+        return 0.0
+    bigness = 1.65 * 0.000125 ** (sg_estimate - 1)
+    boiltime = (1 - math.exp(-0.04 * boil_time_min)) / 4.15
+    return min(bigness * boiltime, 0.50)
+
+
+def calculate_ibu_multi(
+    hop_additions: List[tuple[float, float, float]],
+    batch_size_l: float,
+    sg_estimate: float = 1.050,
+) -> float:
+    total = 0.0
+    for weight_g, aa_pct, boil_min in hop_additions:
+        u = tinseth_utilization(boil_min, sg_estimate)
+        total += calculate_ibu(weight_g, aa_pct, batch_size_l, utilization=u)
+    return round(total, 1)

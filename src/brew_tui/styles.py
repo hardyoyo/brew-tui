@@ -25,6 +25,8 @@ class Style:
     srm_max: float
     abv_min: float
     abv_max: float
+    fg_min: float = 1.008
+    fg_max: float = 1.015
 
     # ── Range string helpers ────────────────────────────────
 
@@ -40,6 +42,9 @@ class Style:
     def abv_range_str(self) -> str:
         return f"{self.abv_min:.1f} – {self.abv_max:.1f}"
 
+    def fg_range_str(self) -> str:
+        return f"{self.fg_min:.3f} – {self.fg_max:.3f}"
+
     # ── Boundary checks ─────────────────────────────────────
 
     def contains_og(self, sg: float) -> bool:
@@ -50,6 +55,12 @@ class Style:
 
     def contains_srm(self, srm: float) -> bool:
         return self.srm_min <= srm <= self.srm_max
+
+    def contains_fg(self, fg: float) -> bool:
+        return self.fg_min <= fg <= self.fg_max
+
+    def contains_abv(self, abv: float) -> bool:
+        return self.abv_min <= abv <= self.abv_max
 
     # ── Status labels ───────────────────────────────────────
 
@@ -74,6 +85,20 @@ class Style:
             return "above"
         return "within"
 
+    def fg_status(self, fg: float) -> str:
+        if fg < self.fg_min:
+            return "below"
+        if fg > self.fg_max:
+            return "above"
+        return "within"
+
+    def abv_status(self, abv: float) -> str:
+        if abv < self.abv_min:
+            return "below"
+        if abv > self.abv_max:
+            return "above"
+        return "within"
+
 
 # ── JSON loader ────────────────────────────────────────────────────
 
@@ -88,6 +113,7 @@ def _parse_style(raw: dict) -> Optional[Style]:
     except KeyError:
         return None
 
+    fg = raw.get("final_gravity", {})
     abv = raw.get("alcohol_by_volume", {})
 
     return Style(
@@ -102,6 +128,8 @@ def _parse_style(raw: dict) -> Optional[Style]:
         srm_max=srm["maximum"]["value"],
         abv_min=abv.get("minimum", {}).get("value", 0.0),
         abv_max=abv.get("maximum", {}).get("value", 0.0),
+        fg_min=fg.get("minimum", {}).get("value", 1.008),
+        fg_max=fg.get("maximum", {}).get("value", 1.015),
     )
 
 

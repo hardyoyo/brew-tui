@@ -56,6 +56,26 @@ class TestStyle:
         assert s.srm_status(10) == "within"
         assert s.srm_status(20) == "above"
 
+    def test_fg_range_str(self):
+        s = _dummy()
+        assert s.fg_range_str() == "1.008 – 1.015"
+
+    def test_contains_fg(self):
+        s = _dummy()
+        assert s.contains_fg(1.010) is True
+        assert s.contains_fg(1.005) is False
+
+    def test_abv_status(self):
+        s = _dummy()
+        assert s.abv_status(3.0) == "below"
+        assert s.abv_status(6.0) == "within"
+        assert s.abv_status(9.0) == "above"
+
+    def test_contains_abv(self):
+        s = _dummy()
+        assert s.contains_abv(6.0) is True
+        assert s.contains_abv(10.0) is False
+
 
 # ── Full JSON parsing ──────────────────────────────────────────────
 
@@ -148,4 +168,6 @@ def _dummy() -> Style:
         srm_max=14,
         abv_min=5.5,
         abv_max=7.5,
+        fg_min=1.008,
+        fg_max=1.015,
     )

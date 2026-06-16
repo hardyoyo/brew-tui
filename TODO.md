@@ -68,5 +68,25 @@
 - [x] `pyproject.toml` entry point — `brew-tui` console script
 - [x] Final integration test: set all values, select style, verify gauges and displays
 
+## ✅ Phase 7: Input Limitations & Implied Features (Done)
+- [x] Multi-malt additions: dynamic list of (name, weight, lovibond, PPG) rows, add/remove
+- [x] Multi-hop additions: dynamic list of (name, weight, AA%, boil_time) rows, add/remove
+- [x] Per-hop Tinseth utilization based on boil time
+- [x] Mash efficiency % control in UI
+- [x] PPG auto-fill from selected malt in addition row
+- [x] `calculate_abv()` engine function
+- [x] `Style.fg_min` / `Style.fg_max` with range string, status, and contains methods
+- [x] ABV gauge on dashboard
+- [x] FG gauge on dashboard + FG input field
+- [x] Recipe save/load JSON to recipe_path
+- [x] New Recipe / Reset button
+- [x] Inventory path uses `config.recipe_path` instead of hardcoded path
+- [x] Inventory list refreshed on return from inventory builder
+- [x] Taller malt/hop/style lists (6 rows), right pane scrollable
+- [x] 16 new tests (114 total): ABV, Tinseth util, multi-IBU, Style FG/ABV, dynamic additions
+
 ## Future
 - [ ] Screenshots in docs/ and README
+- [ ] Input validation feedback (visual indicator on parse failure)
+- [ ] Inventory edit/delete capability
+- [ ] Responsive left pane width

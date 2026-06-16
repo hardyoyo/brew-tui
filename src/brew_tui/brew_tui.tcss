@@ -20,6 +20,7 @@ Screen {
     padding: 1 2;
     border: solid $secondary;
     background: $surface;
+    overflow-y: auto;
 }
 
 Label {
@@ -41,7 +42,7 @@ Input:focus {
 }
 
 #style-header, #settings-header, #dashboard-header,
-#malt-header, #hop-header {
+#malt-add-header, #hop-add-header {
     content-align: center top;
     text-style: bold;
     color: $primary;
@@ -61,7 +62,8 @@ Input:focus {
     color: $text;
 }
 
-#og-display, #srm-display, #ibu-display {
+#og-display, #srm-display, #ibu-display,
+#fg-display, #abv-display {
     margin: 1 0 0 0;
     padding: 0 1;
     color: $text;
@@ -78,6 +80,14 @@ GaugeBar {
 
 Button {
     margin: 0 0 1 0;
+}
+
+#btn-new-recipe {
+    margin: 0 0 1 0;
+}
+
+#btn-save, #btn-load {
+    margin: 0 0 0 0;
 }
 
 InventoryScreen {
@@ -97,8 +107,8 @@ InventoryScreen {
 }
 
 #malt-list, #hop-list {
-    height: 4;
-    max-height: 4;
+    height: 6;
+    max-height: 6;
     border: solid $surface;
     margin: 0 0 1 0;
 }
@@ -112,4 +122,43 @@ Select {
 Select:focus {
     background: $surface;
     border: tall $accent;
+}
+
+.malt-row, .hop-row {
+    layout: horizontal;
+    height: 3;
+    margin: 0 0 1 0;
+}
+
+.malt-row-name, .hop-row-name {
+    width: 1fr;
+    padding: 0 1;
+    color: $text;
+    text-style: bold;
+}
+
+.malt-row-wt, .hop-row-wt {
+    width: 8;
+    margin: 0 1 0 0;
+}
+
+.hop-row-time {
+    width: 6;
+    margin: 0 1 0 0;
+}
+
+.row-rm-btn {
+    width: 3;
+    background: $error;
+    color: $text;
+    border: none;
+    min-width: 3;
+}
+
+#malt-additions, #hop-additions {
+    margin: 0 0 1 0;
+}
+
+#fg-estimate, #mash-efficiency {
+    margin: 0 0 1 0;
 }

@@ -3,11 +3,14 @@
 import pytest
 from brew_tui.engine import (
     _to_float,
+    calculate_abv,
     calculate_og,
     calculate_mcu,
     calculate_srm_from_mcu,
     calculate_srm,
     calculate_ibu,
+    calculate_ibu_multi,
+    tinseth_utilization,
     DEFAULT_BASE_MALT_PPG,
 )
 
@@ -173,3 +176,65 @@ class TestCalculateIBU:
         """50 % utilization should double IBU."""
         ibu = calculate_ibu(30.0, 5.0, 20.0, utilization=0.50)
         assert ibu == pytest.approx(37.5, abs=0.1)
+
+
+# ── ABV ────────────────────────────────────────────────────────────
+
+
+class TestCalculateABV:
+    def test_standard(self):
+        """OG 1.050, FG 1.010 → 5.25% ABV."""
+        abv = calculate_abv(1.050, 1.010)
+        assert abv == pytest.approx(5.25, abs=0.01)
+
+    def test_higher_og(self):
+        """OG 1.070, FG 1.010 → 7.88%."""
+        abv = calculate_abv(1.070, 1.010)
+        assert abv == pytest.approx(7.88, abs=0.01)
+
+    def test_og_equals_fg_returns_zero(self):
+        assert calculate_abv(1.050, 1.050) == 0.0
+
+    def test_fg_above_og_returns_zero(self):
+        assert calculate_abv(1.040, 1.050) == 0.0
+
+    def test_zero_og_returns_zero(self):
+        assert calculate_abv(0.0, 1.010) == 0.0
+
+
+# ── Tinseth utilization ────────────────────────────────────────────
+
+
+class TestTinsethUtilization:
+    def test_sixty_min_at_1050(self):
+        u = tinseth_utilization(60.0, 1.050)
+        assert u == pytest.approx(0.24, abs=0.02)
+
+    def test_thirty_min(self):
+        u = tinseth_utilization(30.0, 1.050)
+        assert u == pytest.approx(0.16, abs=0.02)
+
+    def test_zero_min(self):
+        assert tinseth_utilization(0.0) == 0.0
+
+    def test_capped_at_fifty(self):
+        u = tinseth_utilization(300.0, 1.050)
+        assert u <= 0.50
+
+
+# ── Multi-hop IBU ──────────────────────────────────────────────────
+
+
+class TestCalculateIBUMulti:
+    def test_single_addition(self):
+        """One 30g @ 5% for 60 min → ~18 IBU at 1.050."""
+        ibu = calculate_ibu_multi([(30.0, 5.0, 60.0)], 20.0)
+        assert ibu == pytest.approx(18.0, abs=3.0)  # wider tolerance for util approx
+
+    def test_two_additions(self):
+        """30g @ 5% for 60min + 20g @ 10% for 15min."""
+        ibu = calculate_ibu_multi([(30.0, 5.0, 60.0), (20.0, 10.0, 15.0)], 20.0)
+        assert ibu > 20.0
+
+    def test_empty_additions(self):
+        assert calculate_ibu_multi([], 20.0) == 0.0

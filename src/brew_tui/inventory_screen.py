@@ -1,8 +1,4 @@
-"""Conversational inventory-builder screen.
-
-Walks the user through building their ingredient inventory
-with friendly prompts and parsing.
-"""
+"""Conversational inventory-builder screen."""
 
 from pathlib import Path
 
@@ -18,11 +14,18 @@ from .inventory import (
     Inventory,
 )
 
-INVENTORY_FILE = Path.home() / ".brew-tui-recipes" / INVENTORY_FILENAME
-
 
 class InventoryScreen(Screen):
     """Conversational wizard for building ingredient inventory."""
+
+    BINDINGS = [
+        ("escape", "dismiss_inventory", "Return"),
+    ]
+
+    def __init__(self, recipe_dir: str | None = None):
+        super().__init__()
+        self._recipe_dir = recipe_dir or str(Path.home() / ".brew-tui-recipes")
+        self._inventory_file = Path(self._recipe_dir) / INVENTORY_FILENAME
 
     def compose(self) -> ComposeResult:
         yield Header("Build Inventory")
@@ -31,12 +34,15 @@ class InventoryScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
-        self._inventory: Inventory = Inventory.load(INVENTORY_FILE)
+        self._inventory: Inventory = Inventory.load(self._inventory_file)
         self._stage = -1
         log = self.query_one("#conv-log", RichLog)
         log.write("")
         log.write("[bold yellow]Brewer[/]  " + STAGE_WELCOME)
         self._next_stage()
+
+    def action_dismiss_inventory(self) -> None:
+        self.dismiss(True)
 
     def _next_stage(self) -> None:
         self._stage += 1
@@ -53,7 +59,7 @@ class InventoryScreen(Screen):
         inp.focus()
 
     def _finish(self) -> None:
-        self._inventory.save(INVENTORY_FILE)
+        self._inventory.save(self._inventory_file)
         self.app.notify("Inventory saved!", timeout=4)
         log = self.query_one("#conv-log", RichLog)
         log.write("")

@@ -1,5 +1,6 @@
 """Main Textual TUI application for brew-tui."""
 
+import json
 from pathlib import Path
 from typing import List, Optional
 
@@ -19,12 +20,89 @@ from textual.widgets import (
 )
 
 from .config import BrewConfig
-from .engine import _to_float, calculate_og, calculate_srm, calculate_ibu
+from .engine import (
+    _to_float,
+    calculate_abv,
+    calculate_ibu_multi,
+    calculate_og,
+    calculate_srm,
+)
 from .ingredients import Malt, Hop, get_malts, get_hops, search_malts, search_hops
-from .inventory import INVENTORY_FILENAME, Inventory
+from .inventory import inventory_path, Inventory
 from .inventory_screen import InventoryScreen
 from .styles import DATA_DIR, DATA_FILE, Style, load_styles, search_styles
 from .widgets import GaugeBar
+
+
+class MaltAddition:
+    __next_uid = 0
+
+    def __init__(self, name: str, weight_kg: float, lovibond: float, ppg: float):
+        self.uid = MaltAddition.__next_uid
+        MaltAddition.__next_uid += 1
+        self.name = name
+        self.weight_kg = weight_kg
+        self.lovibond = lovibond
+        self.ppg = ppg
+
+
+class HopAddition:
+    __next_uid = 0
+
+    def __init__(
+        self,
+        name: str,
+        weight_g: float,
+        alpha_acid_pct: float,
+        boil_time_min: float = 60.0,
+    ):
+        self.uid = HopAddition.__next_uid
+        HopAddition.__next_uid += 1
+        self.name = name
+        self.weight_g = weight_g
+        self.alpha_acid_pct = alpha_acid_pct
+        self.boil_time_min = boil_time_min
+
+
+class MaltRow(Horizontal):
+    def __init__(self, addition: MaltAddition):
+        super().__init__(classes="malt-row")
+        self._addition = addition
+
+    def compose(self) -> ComposeResult:
+        yield Label(
+            f"{self._addition.name}  ({self._addition.lovibond:.0f}L, {self._addition.ppg}PPG)",
+            classes="malt-row-name",
+        )
+        yield Input(
+            value=str(self._addition.weight_kg),
+            id=f"malt-wt-{self._addition.uid}",
+            classes="malt-row-wt",
+        )
+        yield Button("✕", id=f"malt-rm-{self._addition.uid}", classes="row-rm-btn")
+
+
+class HopRow(Horizontal):
+    def __init__(self, addition: HopAddition):
+        super().__init__(classes="hop-row")
+        self._addition = addition
+
+    def compose(self) -> ComposeResult:
+        yield Label(
+            f"{self._addition.name}  ({self._addition.alpha_acid_pct:.1f}%)",
+            classes="hop-row-name",
+        )
+        yield Input(
+            value=str(self._addition.weight_g),
+            id=f"hop-wt-{self._addition.uid}",
+            classes="hop-row-wt",
+        )
+        yield Input(
+            value=str(self._addition.boil_time_min),
+            id=f"hop-time-{self._addition.uid}",
+            classes="hop-row-time",
+        )
+        yield Button("✕", id=f"hop-rm-{self._addition.uid}", classes="row-rm-btn")
 
 
 class BrewTUI(App):
@@ -40,24 +118,17 @@ class BrewTUI(App):
         super().__init__()
         self._config = config or BrewConfig.load()
 
-    # ── input reactives ──────────────────────────────────────────────
     batch_size_l = reactive(20.0)
-    base_malt_kg = reactive(5.0)
-    spec_malt_kg = reactive(0.0)
-    spec_malt_lovibond = reactive(10.0)
-    hop_weight_g = reactive(30.0)
-    alpha_acid_pct = reactive(5.0)
+    mash_efficiency_pct = reactive(75.0)
+    fg_estimate = reactive(1.010)
 
-    # ── result reactives ─────────────────────────────────────────────
     og = reactive(0.0)
     srm = reactive(0.0)
     ibu = reactive(0.0)
+    abv = reactive(0.0)
 
-    # ── style reactives ──────────────────────────────────────────────
-    selected_style = reactive(None)  # type: Optional[Style]
+    selected_style: Optional[Style] = reactive(None)
     style_query = reactive("")
-
-    # ── ingredient reactives ──────────────────────────────────────────
     malt_query = reactive("")
     hop_query = reactive("")
 
@@ -66,8 +137,8 @@ class BrewTUI(App):
     _all_styles: List[Style] = []
     _all_malts: List[Malt] = []
     _all_hops: List[Hop] = []
-
-    # ── Composable widgets ───────────────────────────────────────────
+    _malt_additions: List[MaltAddition] = []
+    _hop_additions: List[HopAddition] = []
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -75,32 +146,36 @@ class BrewTUI(App):
             with Vertical(id="left-pane"):
                 yield Label("Batch Size (L)")
                 yield Input(id="batch-size", value="20.0")
-                yield Label("Base Malt (kg)")
-                yield Input(id="base-malt", value="5.0")
-                yield Label("Specialty Malt (kg)")
-                yield Input(id="spec-malt", value="0.0")
-                yield Label("Spec Malt Lovibond")
-                yield Input(id="spec-lovibond", value="10.0")
-                yield Label("Hop Weight (g)")
-                yield Input(id="hop-weight", value="30.0")
-                yield Label("Alpha Acid (%)")
-                yield Input(id="alpha-acid", value="5.0")
-                yield Static("── Malts ──", id="malt-header")
-                yield Input(id="malt-filter", placeholder="Search malts...")
+
+                yield Static("── Malt Additions ──", id="malt-add-header")
+                yield Vertical(id="malt-additions")
+                yield Input(id="malt-filter", placeholder="Search malts to add...")
                 yield ListView(id="malt-list")
-                yield Static("── Hops ──", id="hop-header")
-                yield Input(id="hop-filter", placeholder="Search hops...")
+
+                yield Static("── Hop Additions ──", id="hop-add-header")
+                yield Vertical(id="hop-additions")
+                yield Input(id="hop-filter", placeholder="Search hops to add...")
                 yield ListView(id="hop-list")
+
+                yield Label("FG Estimate")
+                yield Input(id="fg-estimate", value="1.010")
+                yield Label("Mash Efficiency (%)")
+                yield Input(id="mash-efficiency", value="75")
 
             with Vertical(id="right-pane"):
                 yield Static("═══ Style Selector ═══", id="style-header")
                 yield Input(id="style-filter", placeholder="Filter styles...")
                 yield ListView(id="style-list")
                 yield Static(id="style-info")
+
                 yield Static("═══ Settings ═══", id="settings-header")
                 yield Label("Theme")
                 yield Select([], id="theme-select", prompt="Select theme...")
+                yield Button("New Recipe", id="btn-new-recipe")
+                yield Button("Save Recipe", id="btn-save", variant="primary")
+                yield Button("Load Recipe", id="btn-load")
                 yield Button("Build Inventory", id="btn-inventory", variant="primary")
+
                 yield Static("═══ Dashboard ═══", id="dashboard-header")
                 yield Static("OG:  —", id="og-display")
                 yield GaugeBar(id="og-gauge")
@@ -108,23 +183,29 @@ class BrewTUI(App):
                 yield GaugeBar(id="srm-gauge")
                 yield Static("IBU: —", id="ibu-display")
                 yield GaugeBar(id="ibu-gauge")
+                yield Static("FG:  —", id="fg-display")
+                yield GaugeBar(id="fg-gauge")
+                yield Static("ABV: —", id="abv-display")
+                yield GaugeBar(id="abv-gauge")
 
         yield Footer()
-
-    # ── Mount ────────────────────────────────────────────────────────
 
     def on_mount(self) -> None:
         self._all_styles = load_styles()
         self._populate_style_list(self._all_styles)
-        for gauge_id in ("#og-gauge", "#srm-gauge", "#ibu-gauge"):
+        for gauge_id in (
+            "#og-gauge",
+            "#srm-gauge",
+            "#ibu-gauge",
+            "#fg-gauge",
+            "#abv-gauge",
+        ):
             self.query_one(gauge_id, GaugeBar).display = False
 
-        self._inventory = Inventory.load(
-            Path(self._config.recipe_path) / INVENTORY_FILENAME
-        )
+        self._inventory = Inventory.load(inventory_path(Path(self._config.recipe_path)))
         if (
             not self._inventory.nonempty
-            and (Path(self._config.recipe_path) / INVENTORY_FILENAME).exists()
+            and inventory_path(Path(self._config.recipe_path)).exists()
         ):
             self.notify(
                 "Inventory file was corrupted — starting fresh",
@@ -160,11 +241,13 @@ class BrewTUI(App):
             self.theme = self._config.theme
             theme_select.value = self._config.theme
 
+        self._malt_additions = [MaltAddition("Pale 2-Row", 5.0, 2.0, 37.0)]
+        self._rebuild_malt_ui()
+
         self._painted = True
         self._recalc()
 
     def _require_recalc(self) -> None:
-        """Request a recalc with recursion guard."""
         if self._recalc_id:
             return
         self._recalc_id += 1
@@ -173,8 +256,23 @@ class BrewTUI(App):
         finally:
             self._recalc_id -= 1
 
+    # ── Dynamic UI builders ──────────────────────────────────────
+
+    def _rebuild_malt_ui(self) -> None:
+        container = self.query_one("#malt-additions", Vertical)
+        container.remove_children()
+        for a in self._malt_additions:
+            container.mount(MaltRow(a))
+
+    def _rebuild_hop_ui(self) -> None:
+        container = self.query_one("#hop-additions", Vertical)
+        container.remove_children()
+        for a in self._hop_additions:
+            container.mount(HopRow(a))
+
+    # ── List population ──────────────────────────────────────────
+
     def _populate_style_list(self, styles: List[Style]) -> None:
-        """Replace the style list with a new set of items."""
         lv = self.query_one("#style-list", ListView)
         lv.clear()
         for s in styles:
@@ -198,37 +296,50 @@ class BrewTUI(App):
         if hops:
             lv.index = 0
 
-    # ── Input handling ───────────────────────────────────────────────
+    # ── Input handling ───────────────────────────────────────────
 
     def on_input_changed(self, event: Input.Changed) -> None:
         raw = event.value
         input_id = event.input.id
+
         if input_id == "batch-size":
             self.batch_size_l = _to_float(raw)
-        elif input_id == "base-malt":
-            self.base_malt_kg = _to_float(raw, 0.0)
-        elif input_id == "spec-malt":
-            self.spec_malt_kg = _to_float(raw, 0.0)
-        elif input_id == "spec-lovibond":
-            self.spec_malt_lovibond = _to_float(raw, 0.0)
-        elif input_id == "hop-weight":
-            self.hop_weight_g = _to_float(raw, 0.0)
-        elif input_id == "alpha-acid":
-            self.alpha_acid_pct = _to_float(raw, 0.0)
+        elif input_id == "fg-estimate":
+            self.fg_estimate = _to_float(raw, 1.010)
+        elif input_id == "mash-efficiency":
+            self.mash_efficiency_pct = _to_float(raw, 75.0)
         elif input_id == "style-filter":
             self.style_query = raw
         elif input_id == "malt-filter":
             self.malt_query = raw
         elif input_id == "hop-filter":
             self.hop_query = raw
+        elif input_id and input_id.startswith("malt-wt-"):
+            uid = int(input_id.split("-")[-1])
+            weight = _to_float(raw, 0.0)
+            for a in self._malt_additions:
+                if a.uid == uid:
+                    a.weight_kg = weight
+                    break
+            self._require_recalc()
+        elif input_id and input_id.startswith("hop-wt-"):
+            uid = int(input_id.split("-")[-1])
+            weight = _to_float(raw, 0.0)
+            for a in self._hop_additions:
+                if a.uid == uid:
+                    a.weight_g = weight
+                    break
+            self._require_recalc()
+        elif input_id and input_id.startswith("hop-time-"):
+            uid = int(input_id.split("-")[-1])
+            t = _to_float(raw, 0.0)
+            for a in self._hop_additions:
+                if a.uid == uid:
+                    a.boil_time_min = t
+                    break
+            self._require_recalc()
 
-    # ── Style selection ──────────────────────────────────────────────
-
-    def watch_style_query(self, query: str) -> None:
-        if not self._painted:
-            return
-        matches = search_styles(self._all_styles, query)
-        self._populate_style_list(matches)
+    # ── ListView selection ───────────────────────────────────────
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         if event.item is None:
@@ -238,24 +349,47 @@ class BrewTUI(App):
         lv = event.list_view
         if lv.index is None:
             return
+
         if lv.id == "style-list":
             matches = search_styles(self._all_styles, self.style_query)
             if lv.index < len(matches):
                 self.selected_style = matches[lv.index]
+
         elif lv.id == "malt-list":
             matches = search_malts(self._all_malts, self.malt_query)
             if lv.index < len(matches):
                 malt = matches[lv.index]
-                self.query_one("#spec-lovibond", Input).value = str(malt.lovibond)
-                self.query_one("#spec-malt", Input).focus()
+                addition = MaltAddition(
+                    name=malt.name,
+                    weight_kg=1.0,
+                    lovibond=malt.lovibond,
+                    ppg=malt.ppg,
+                )
+                self._malt_additions.append(addition)
+                self._rebuild_malt_ui()
+                self._require_recalc()
+
         elif lv.id == "hop-list":
             matches = search_hops(self._all_hops, self.hop_query)
             if lv.index < len(matches):
                 hop = matches[lv.index]
-                self.query_one("#alpha-acid", Input).value = str(hop.alpha_acid_pct)
-                self.query_one("#hop-weight", Input).focus()
+                addition = HopAddition(
+                    name=hop.name,
+                    weight_g=30.0,
+                    alpha_acid_pct=hop.alpha_acid_pct,
+                    boil_time_min=60.0,
+                )
+                self._hop_additions.append(addition)
+                self._rebuild_hop_ui()
+                self._require_recalc()
 
-    # ── Ingredient watchers ──────────────────────────────────────────
+    # ── Ingredient watchers ──────────────────────────────────────
+
+    def watch_style_query(self, query: str) -> None:
+        if not self._painted:
+            return
+        matches = search_styles(self._all_styles, query)
+        self._populate_style_list(matches)
 
     def watch_malt_query(self, query: str) -> None:
         if not self._painted:
@@ -269,16 +403,136 @@ class BrewTUI(App):
         matches = search_hops(self._all_hops, query)
         self._populate_hop_list(matches)
 
-    # ── Inventory ────────────────────────────────────────────────────
-
-    def action_open_inventory(self) -> None:
-        self.push_screen(InventoryScreen())
+    # ── Button / action handlers ─────────────────────────────────
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn-inventory":
-            self.push_screen(InventoryScreen())
+        btn_id = event.button.id
 
-    # ── Theme ────────────────────────────────────────────────────────
+        if btn_id and btn_id.startswith("malt-rm-"):
+            uid = int(btn_id.split("-")[-1])
+            self._malt_additions = [a for a in self._malt_additions if a.uid != uid]
+            self._rebuild_malt_ui()
+            self._require_recalc()
+
+        elif btn_id and btn_id.startswith("hop-rm-"):
+            uid = int(btn_id.split("-")[-1])
+            self._hop_additions = [a for a in self._hop_additions if a.uid != uid]
+            self._rebuild_hop_ui()
+            self._require_recalc()
+
+        elif btn_id == "btn-inventory":
+            self.action_open_inventory()
+
+        elif btn_id == "btn-new-recipe":
+            self.action_new_recipe()
+
+        elif btn_id == "btn-save":
+            self._save_recipe()
+
+        elif btn_id == "btn-load":
+            self._load_recipe()
+
+    def action_open_inventory(self) -> None:
+        self.push_screen(
+            InventoryScreen(self._config.recipe_path),
+            self._on_inventory_closed,
+        )
+
+    def _on_inventory_closed(self, _result: object = None) -> None:
+        inv_path = inventory_path(Path(self._config.recipe_path))
+        self._inventory = Inventory.load(inv_path)
+        self._all_malts = get_malts()
+        self._all_hops = get_hops()
+        if self._inventory.nonempty:
+            for m in self._inventory.malts:
+                self._all_malts.append(Malt(f"[I] {m.name}", m.ppg, m.lovibond))
+            for m in self._inventory.specialty_grains:
+                self._all_malts.append(Malt(f"[I] {m.name}", m.ppg, m.lovibond))
+            for h in self._inventory.hops:
+                self._all_hops.append(Hop(f"[I] {h.name}", h.alpha_acid_pct))
+        self._populate_malt_list(self._all_malts)
+        self._populate_hop_list(self._all_hops)
+
+    def action_new_recipe(self) -> None:
+        self._malt_additions.clear()
+        self._hop_additions.clear()
+        self.batch_size_l = 20.0
+        self.fg_estimate = 1.010
+        self.mash_efficiency_pct = 75.0
+        self.selected_style = None
+        self.query_one("#batch-size", Input).value = "20.0"
+        self.query_one("#fg-estimate", Input).value = "1.010"
+        self.query_one("#mash-efficiency", Input).value = "75"
+        self._rebuild_malt_ui()
+        self._rebuild_hop_ui()
+        self._require_recalc()
+        self.notify("New recipe started", timeout=3)
+
+    def _save_recipe(self) -> None:
+        recipe = {
+            "version": 1,
+            "batch_size_l": self.batch_size_l,
+            "fg_estimate": self.fg_estimate,
+            "mash_efficiency_pct": self.mash_efficiency_pct,
+            "malt_additions": [
+                {
+                    "name": a.name,
+                    "weight_kg": a.weight_kg,
+                    "lovibond": a.lovibond,
+                    "ppg": a.ppg,
+                }
+                for a in self._malt_additions
+            ],
+            "hop_additions": [
+                {
+                    "name": a.name,
+                    "weight_g": a.weight_g,
+                    "alpha_acid_pct": a.alpha_acid_pct,
+                    "boil_time_min": a.boil_time_min,
+                }
+                for a in self._hop_additions
+            ],
+        }
+        path = Path(self._config.recipe_path) / "recipe.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(recipe, f, indent=2)
+        self.notify("Recipe saved", timeout=3)
+
+    def _load_recipe(self) -> None:
+        path = Path(self._config.recipe_path) / "recipe.json"
+        if not path.is_file():
+            self.notify(
+                "No saved recipe found",
+                severity="warning",
+                timeout=3,
+            )
+            return
+        with open(path) as f:
+            recipe = json.load(f)
+
+        MaltAddition.__next_uid = 0
+        HopAddition.__next_uid = 0
+
+        self.batch_size_l = recipe.get("batch_size_l", 20.0)
+        self.fg_estimate = recipe.get("fg_estimate", 1.010)
+        self.mash_efficiency_pct = recipe.get("mash_efficiency_pct", 75.0)
+        self._malt_additions = [
+            MaltAddition(**a) for a in recipe.get("malt_additions", [])
+        ]
+        self._hop_additions = [
+            HopAddition(**a) for a in recipe.get("hop_additions", [])
+        ]
+
+        self.query_one("#batch-size", Input).value = str(self.batch_size_l)
+        self.query_one("#fg-estimate", Input).value = str(self.fg_estimate)
+        self.query_one("#mash-efficiency", Input).value = str(self.mash_efficiency_pct)
+        self._rebuild_malt_ui()
+        self._rebuild_hop_ui()
+        self._require_recalc()
+        self.notify("Recipe loaded", timeout=3)
+
+    # ── Theme ────────────────────────────────────────────────────
 
     def action_cycle_theme(self) -> None:
         themes = sorted(self.available_themes)
@@ -302,7 +556,7 @@ class BrewTUI(App):
     def recipe_path(self) -> str:
         return self._config.recipe_path
 
-    # ── Reactive watchers ────────────────────────────────────────────
+    # ── Reactive watchers ────────────────────────────────────────
 
     def watch_selected_style(self, style: Optional[Style]) -> None:
         if not self._painted:
@@ -311,29 +565,20 @@ class BrewTUI(App):
         self._update_gauge_targets(style)
         self._refresh_all_displays()
 
-    def watch_batch_size_l(self, _value: float) -> None:
+    def _on_input_reactive_changed(self, _value: float) -> None:
         if self._painted:
             self._require_recalc()
 
-    def watch_base_malt_kg(self, _value: float) -> None:
-        if self._painted:
-            self._require_recalc()
+    watch_batch_size_l = _on_input_reactive_changed
+    watch_mash_efficiency_pct = _on_input_reactive_changed
 
-    def watch_spec_malt_kg(self, _value: float) -> None:
-        if self._painted:
-            self._require_recalc()
-
-    def watch_spec_malt_lovibond(self, _value: float) -> None:
-        if self._painted:
-            self._require_recalc()
-
-    def watch_hop_weight_g(self, _value: float) -> None:
-        if self._painted:
-            self._require_recalc()
-
-    def watch_alpha_acid_pct(self, _value: float) -> None:
-        if self._painted:
-            self._require_recalc()
+    def watch_fg_estimate(self, value: float) -> None:
+        if not self._painted:
+            return
+        self._require_recalc()
+        self._refresh_display("fg-display", "FG", value, ".3f")
+        if self.selected_style:
+            self.query_one("#fg-gauge", GaugeBar).value = value
 
     def watch_og(self, value: float) -> None:
         if self._painted:
@@ -353,20 +598,38 @@ class BrewTUI(App):
             if self.selected_style:
                 self.query_one("#ibu-gauge", GaugeBar).value = value
 
-    # ── Display helpers ──────────────────────────────────────────────
+    def watch_abv(self, value: float) -> None:
+        if self._painted:
+            self._refresh_display("abv-display", "ABV", value, ".2f")
+            if self.selected_style:
+                self.query_one("#abv-gauge", GaugeBar).value = value
+
+    # ── Display helpers ──────────────────────────────────────────
+
+    _WIDGET_MAP = [
+        ("og-display", "OG", "og", ".4f"),
+        ("srm-display", "SRM", "srm", ".2f"),
+        ("ibu-display", "IBU", "ibu", ".1f"),
+        ("fg-display", "FG", "fg_estimate", ".3f"),
+        ("abv-display", "ABV", "abv", ".2f"),
+    ]
 
     def _refresh_display(
-        self, widget_id: str, label: str, value: float, fmt: str
+        self,
+        widget_id: str,
+        label: str,
+        value: float,
+        fmt: str,
     ) -> None:
-        """Update a Static display widget with or without style context."""
         style = self.selected_style
         w = self.query_one(f"#{widget_id}", Static)
         if style is None:
             w.update(f"{label}: {value:{fmt}}")
             return
 
-        lo = getattr(style, f"{widget_id.split('-')[0]}_min")
-        hi = getattr(style, f"{widget_id.split('-')[0]}_max")
+        prefix = widget_id.split("-")[0]
+        lo = getattr(style, f"{prefix}_min")
+        hi = getattr(style, f"{prefix}_max")
 
         if value < lo:
             status = "[bold blue]below[/]"
@@ -387,44 +650,62 @@ class BrewTUI(App):
             f"OG {style.og_range_str()}  "
             f"IBU {style.ibu_range_str()}  "
             f"SRM {style.srm_range_str()}  "
+            f"FG {style.fg_range_str()}  "
             f"ABV {style.abv_range_str()}"
         )
 
     def _update_gauge_targets(self, style: Optional[Style]) -> None:
         if style is None:
-            for gid in ("#og-gauge", "#srm-gauge", "#ibu-gauge"):
+            for gid in (
+                "#og-gauge",
+                "#srm-gauge",
+                "#ibu-gauge",
+                "#fg-gauge",
+                "#abv-gauge",
+            ):
                 self.query_one(gid, GaugeBar).display = False
             return
 
-        for prefix, attr in [("og", "og"), ("srm", "srm"), ("ibu", "ibu")]:
+        for prefix in ("og", "srm", "ibu", "fg", "abv"):
             g = self.query_one(f"#{prefix}-gauge", GaugeBar)
             g.display = True
-            g.value = getattr(self, attr)
-            g.minimum = getattr(style, f"{attr}_min")
-            g.maximum = getattr(style, f"{attr}_max")
+            g.value = self._gauge_value(prefix)
+            g.minimum = getattr(style, f"{prefix}_min")
+            g.maximum = getattr(style, f"{prefix}_max")
+
+    def _gauge_value(self, prefix: str) -> float:
+        mapping = {
+            "og": self.og,
+            "srm": self.srm,
+            "ibu": self.ibu,
+            "fg": self.fg_estimate,
+            "abv": self.abv,
+        }
+        return mapping[prefix]
 
     def _refresh_all_displays(self) -> None:
-        for wid, label, fmt in [
-            ("og-display", "OG", ".4f"),
-            ("srm-display", "SRM", ".2f"),
-            ("ibu-display", "IBU", ".1f"),
-        ]:
-            self._refresh_display(wid, label, getattr(self, label.lower()), fmt)
+        for wid, label, attr, fmt in self._WIDGET_MAP:
+            self._refresh_display(wid, label, getattr(self, attr), fmt)
 
-    # ── Calculation ──────────────────────────────────────────────────
+    # ── Calculation ──────────────────────────────────────────────
 
     def _recalc(self) -> None:
+        malt_weights = [a.weight_kg for a in self._malt_additions]
+        malt_ppgs = [a.ppg for a in self._malt_additions]
+        malt_lovis = [a.lovibond for a in self._malt_additions]
+        efficiency = self.mash_efficiency_pct / 100.0
+
         self.og = calculate_og(
-            [self.base_malt_kg, self.spec_malt_kg],
+            malt_weights,
             self.batch_size_l,
+            efficiency,
+            malt_ppgs,
         )
-        self.srm = calculate_srm(
-            [self.spec_malt_kg],
-            [self.spec_malt_lovibond],
-            self.batch_size_l,
-        )
-        self.ibu = calculate_ibu(
-            self.hop_weight_g,
-            self.alpha_acid_pct,
-            self.batch_size_l,
-        )
+        self.srm = calculate_srm(malt_weights, malt_lovis, self.batch_size_l)
+
+        hop_data = [
+            (a.weight_g, a.alpha_acid_pct, a.boil_time_min) for a in self._hop_additions
+        ]
+        self.ibu = calculate_ibu_multi(hop_data, self.batch_size_l, self.og)
+
+        self.abv = calculate_abv(self.og, self.fg_estimate)
