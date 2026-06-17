@@ -114,6 +114,9 @@
 - [x] Recipe format v2 includes `unit_system` field (values still stored in metric internally)
 - [x] 130 tests pass, lint clean
 
+## Up Next
+- [ ] **Usability: navigation & interaction improvements** — keyboard nav, tab order, focus management, layout tweaks
+
 ## Future
 - [ ] Two-column malt/hop rows on wider terminals
 - [ ] Tap water / mineral profile inputs
