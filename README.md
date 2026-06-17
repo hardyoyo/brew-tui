@@ -39,6 +39,16 @@ pip install -e ".[dev]"
 pytest
 ```
 
+## Contributing
+
+Before committing, install the pre-commit hooks to auto-check formatting:
+
+```bash
+make install-pre-commit
+```
+
+This runs `ruff` and `black` on every commit so the CI stays green.
+
 ## License
 
 BSD 0-Clause
