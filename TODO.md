@@ -104,8 +104,17 @@
 - [x] Recipe files stored in `config.recipe_path/{name}.json`
 - [x] 6 new tests (130 total), lint clean
 
+## ✅ Phase 10: Imperial Units (Done)
+- [x] Unit conversion module (`units.py`) with lb↔kg, oz↔g, gal↔L
+- [x] `unit_system` field in config ("imperial" default)
+- [x] Batch size label dynamic: "Batch Size (gal)" / "Batch Size (L)"
+- [x] Malt weights displayed in lb, hop weights in oz (imperial default)
+- [x] Imperial-friendly defaults: 5 gal, 11 lb base malt, 1 oz hop addition
+- [x] `ctrl+u` toggles between imperial/metric with live conversion
+- [x] Recipe format v2 includes `unit_system` field (values still stored in metric internally)
+- [x] 130 tests pass, lint clean
+
 ## Future
-- [ ] Refactor to support imperial units (gallon, lb, oz) and make them the default
 - [ ] Two-column malt/hop rows on wider terminals
 - [ ] Tap water / mineral profile inputs
 - [ ] Mash temperature steps

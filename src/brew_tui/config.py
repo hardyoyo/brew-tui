@@ -21,6 +21,7 @@ DEFAULT_RECIPE_DIR = Path.home() / ".brew-tui-recipes"
 class BrewConfig:
     theme: str = "textual-dark"
     recipe_path: str = str(DEFAULT_RECIPE_DIR)
+    unit_system: str = "imperial"
 
     @classmethod
     def load(cls, path: Path | None = None) -> Self:
@@ -32,6 +33,7 @@ class BrewConfig:
                 return cls(
                     theme=data.get("theme", cls.theme),
                     recipe_path=data.get("recipe_path", cls.recipe_path),
+                    unit_system=data.get("unit_system", cls.unit_system),
                 )
         except (json.JSONDecodeError, OSError):
             pass
