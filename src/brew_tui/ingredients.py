@@ -20,6 +20,26 @@ class Hop:
 # ── Malts ──────────────────────────────────────────────────────────────
 
 _COMMON_MALTS = [
+    # Liquid Malt Extract
+    Malt("Extra Light LME", 37, 1.5),
+    Malt("Light LME", 36, 2),
+    Malt("Amber LME", 35, 12),
+    Malt("Dark LME", 34, 20),
+    Malt("Wheat LME", 36, 3),
+    Malt("Pilsner LME", 37, 1.5),
+    Malt("Munich LME", 35, 9),
+    Malt("Rye LME", 35, 4),
+    # Dry Malt Extract
+    Malt("Extra Light DME", 44, 2),
+    Malt("Light DME", 44, 3),
+    Malt("Amber DME", 43, 12),
+    Malt("Dark DME", 42, 22),
+    Malt("Wheat DME", 44, 3),
+    Malt("Pilsner DME", 44, 2),
+    Malt("Munich DME", 43, 9),
+    Malt("Rye DME", 43, 4),
+    Malt("Rice DME", 44, 1),
+    # Base & Specialty Grains
     Malt("Pale 2-Row", 37, 2),
     Malt("Pale 6-Row", 35, 2),
     Malt("Pilsner", 37, 1.5),

@@ -132,7 +132,7 @@ class BrewTUI(App):
 
     CSS_PATH = "brew_tui.tcss"
     BINDINGS = [
-        ("ctrl+t", "cycle_theme", "Theme"),
+        ("ctrl+t", "focus_theme", "Theme"),
         ("ctrl+i", "open_inventory", "Build Inventory"),
         ("ctrl+e", "edit_inventory", "Edit Inventory"),
         ("ctrl+f", "focus_style_filter", "Style Search"),
@@ -361,6 +361,17 @@ class BrewTUI(App):
     def on_input_changed(self, event: Input.Changed) -> None:
         raw = event.value
         input_id = event.input.id
+
+        # Text-search filters — no float validation needed
+        if input_id in ("style-filter", "malt-filter", "hop-filter"):
+            if input_id == "style-filter":
+                self.style_query = raw
+            elif input_id == "malt-filter":
+                self.malt_query = raw
+            elif input_id == "hop-filter":
+                self.hop_query = raw
+            return
+
         valid = self._is_valid_float(raw)
         event.input.set_class(not valid, "invalid")
 
@@ -375,12 +386,6 @@ class BrewTUI(App):
             self.fg_estimate = self._clamp(float(raw), 0.990, 1.200)
         elif input_id == "mash-efficiency":
             self.mash_efficiency_pct = self._clamp(float(raw), 1.0, 100.0)
-        elif input_id == "style-filter":
-            self.style_query = raw
-        elif input_id == "malt-filter":
-            self.malt_query = raw
-        elif input_id == "hop-filter":
-            self.hop_query = raw
         elif input_id and input_id.startswith("malt-wt-"):
             uid = int(input_id.split("-")[-1])
             raw_lb_or_kg = float(raw)
@@ -510,7 +515,7 @@ class BrewTUI(App):
 
     def action_open_inventory(self) -> None:
         self.push_screen(
-            InventoryScreen(self._config.recipe_path),
+            InventoryScreen(self._config.recipe_path, imperial=self._imperial()),
             self._on_inventory_closed,
         )
 
@@ -682,16 +687,8 @@ class BrewTUI(App):
 
     # ── Theme ────────────────────────────────────────────────────
 
-    def action_cycle_theme(self) -> None:
-        themes = sorted(self.available_themes)
-        current = self.theme
-        idx = (themes.index(current) + 1) % len(themes) if current in themes else 0
-        new_theme = themes[idx]
-        self.theme = new_theme
-        self._config.theme = new_theme
-        self._config.save()
-        self.query_one("#theme-select", Select).value = new_theme
-        self.notify(f"Theme: {new_theme}", timeout=3)
+    def action_focus_theme(self) -> None:
+        self.query_one("#theme-select", Select).focus()
 
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "theme-select":
