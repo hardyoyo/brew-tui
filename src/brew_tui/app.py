@@ -618,6 +618,12 @@ class BrewTUI(App):
         self._populate_malt_list(self._all_malts)
         self._populate_hop_list(self._all_hops)
 
+    def _focus_first_malt_or_batch(self) -> None:
+        if self._malt_additions:
+            self.query_one(f"#malt-wt-{self._malt_additions[0].uid}", Input).focus()
+        else:
+            self.query_one("#batch-size", Input).focus()
+
     def _on_wizard_done(self, result: WizardResult | None = None) -> None:
         if result is None:
             return
@@ -655,10 +661,7 @@ class BrewTUI(App):
         self._rebuild_malt_ui()
         self._rebuild_hop_ui()
         self._require_recalc()
-        if self._malt_additions:
-            self.query_one(f"#malt-wt-{self._malt_additions[0].uid}", Input).focus()
-        else:
-            self.query_one("#batch-size", Input).focus()
+        self.call_after_refresh(self._focus_first_malt_or_batch)
         self.notify("Recipe created from wizard!", timeout=3)
 
     def action_new_recipe(self) -> None:

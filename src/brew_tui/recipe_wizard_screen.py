@@ -12,7 +12,7 @@ from .ingredients import Malt, Hop, search_malts, search_hops
 from .styles import Style, search_styles
 from .units import l_to_gal, gal_to_l, lb_to_kg, oz_to_g
 
-_WEIGHT_RE = re.compile(r"^([\d.]+)\s*(kg|lb|lbs|oz|g|#)?$", re.IGNORECASE)
+_WEIGHT_RE = re.compile(r"^([\d.]+)\s*(gal|l|oz|lb|lbs|kg|g|#)?$", re.IGNORECASE)
 _HOP_TIME_RE = re.compile(r"@\s*([\d.]+)\s*(min(?:ute)?s?)?", re.IGNORECASE)
 _WELCOME = (
     "Welcome to the Brew Wizard!\n\n"
