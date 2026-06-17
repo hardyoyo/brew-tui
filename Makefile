@@ -11,6 +11,9 @@ install: ## Install the package
 install-dev: ## Install with dev dependencies
 	pip install -e ".[dev]"
 
+install-pre-commit: ## Install pre-commit hooks
+	pre-commit install
+
 test: ## Run all tests
 	pytest -v
 
