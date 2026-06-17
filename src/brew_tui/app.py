@@ -31,6 +31,7 @@ from .inventory import inventory_path, Inventory
 from .inventory_edit_screen import InventoryEditScreen
 from .inventory_screen import InventoryScreen
 from .recipe_io_screen import OpenRecipeScreen, SaveAsScreen
+from .recipe_wizard_screen import RecipeWizardScreen, WizardResult
 from .styles import DATA_DIR, DATA_FILE, Style, load_styles, search_styles
 from .units import (
     UnitSystem,
@@ -135,6 +136,10 @@ class BrewTUI(App):
         ("ctrl+t", "focus_theme", "Theme"),
         ("ctrl+i", "open_inventory", "Build Inventory"),
         ("ctrl+e", "edit_inventory", "Edit Inventory"),
+        ("ctrl+w", "open_wizard", "Brew Wizard"),
+        ("ctrl+n", "new_recipe", "New Recipe"),
+        ("ctrl+s", "save_recipe_as", "Save As"),
+        ("ctrl+o", "open_recipe", "Open"),
         ("ctrl+f", "focus_style_filter", "Style Search"),
         ("ctrl+u", "toggle_units", "Toggle Units"),
     ]
@@ -165,6 +170,11 @@ class BrewTUI(App):
     _malt_additions: List[MaltAddition] = []
     _hop_additions: List[HopAddition] = []
     _current_recipe_name: Optional[str] = None
+    _recipe_style_name: Optional[str] = None
+    _recipe_yeast: Optional[str] = None
+    _recipe_pitching_temp: Optional[str] = None
+    _recipe_fermentation_time: Optional[str] = None
+    _recipe_notes: Optional[str] = None
 
     def _imperial(self) -> bool:
         return self._config.unit_system == UnitSystem.IMPERIAL
@@ -201,6 +211,7 @@ class BrewTUI(App):
                 yield Label("Theme")
                 yield Select([], id="theme-select", prompt="Select theme...")
                 yield Button("New Recipe", id="btn-new-recipe")
+                yield Button("Brew Wizard", id="btn-wizard", variant="primary")
                 yield Button("Save As...", id="btn-save-as", variant="primary")
                 yield Button("Open...", id="btn-open")
                 yield Button("Build Inventory", id="btn-inventory", variant="primary")
@@ -442,8 +453,15 @@ class BrewTUI(App):
                     lovibond=malt.lovibond,
                     ppg=malt.ppg,
                 )
+                uid = addition.uid
                 self._malt_additions.append(addition)
                 self._rebuild_malt_ui()
+                self.malt_query = ""
+                self.query_one("#malt-filter", Input).value = ""
+                self.set_timer(
+                    0.01,
+                    lambda uid=uid: self.query_one(f"#malt-wt-{uid}", Input).focus(),
+                )
                 self._require_recalc()
 
         elif lv.id == "hop-list":
@@ -457,8 +475,15 @@ class BrewTUI(App):
                     alpha_acid_pct=hop.alpha_acid_pct,
                     boil_time_min=60.0,
                 )
+                uid = addition.uid
                 self._hop_additions.append(addition)
                 self._rebuild_hop_ui()
+                self.hop_query = ""
+                self.query_one("#hop-filter", Input).value = ""
+                self.set_timer(
+                    0.01,
+                    lambda uid=uid: self.query_one(f"#hop-wt-{uid}", Input).focus(),
+                )
                 self._require_recalc()
 
     # ── Ingredient watchers ──────────────────────────────────────
@@ -491,12 +516,14 @@ class BrewTUI(App):
             self._malt_additions = [a for a in self._malt_additions if a.uid != uid]
             self._rebuild_malt_ui()
             self._require_recalc()
+            self.query_one("#malt-filter", Input).focus()
 
         elif btn_id and btn_id.startswith("hop-rm-"):
             uid = int(btn_id.split("-")[-1])
             self._hop_additions = [a for a in self._hop_additions if a.uid != uid]
             self._rebuild_hop_ui()
             self._require_recalc()
+            self.query_one("#hop-filter", Input).focus()
 
         elif btn_id == "btn-inventory":
             self.action_open_inventory()
@@ -510,6 +537,9 @@ class BrewTUI(App):
         elif btn_id == "btn-save-as":
             self.action_save_recipe_as()
 
+        elif btn_id == "btn-wizard":
+            self.action_open_wizard()
+
         elif btn_id == "btn-open":
             self.action_open_recipe()
 
@@ -517,6 +547,17 @@ class BrewTUI(App):
         self.push_screen(
             InventoryScreen(self._config.recipe_path, imperial=self._imperial()),
             self._on_inventory_closed,
+        )
+
+    def action_open_wizard(self) -> None:
+        self.push_screen(
+            RecipeWizardScreen(
+                self._all_styles,
+                self._all_malts,
+                self._all_hops,
+                imperial=self._imperial(),
+            ),
+            self._on_wizard_done,
         )
 
     def action_focus_style_filter(self) -> None:
@@ -577,6 +618,49 @@ class BrewTUI(App):
         self._populate_malt_list(self._all_malts)
         self._populate_hop_list(self._all_hops)
 
+    def _on_wizard_done(self, result: WizardResult | None = None) -> None:
+        if result is None:
+            return
+        self._malt_additions.clear()
+        self._hop_additions.clear()
+        MaltAddition.__next_uid = 0
+        HopAddition.__next_uid = 0
+
+        self.batch_size_l = result.batch_size_l
+        if self._imperial():
+            self.query_one("#batch-size", Input).value = (
+                f"{l_to_gal(result.batch_size_l):.1f}"
+            )
+        else:
+            self.query_one("#batch-size", Input).value = f"{result.batch_size_l:.1f}"
+
+        for d in result.malt_additions:
+            self._malt_additions.append(MaltAddition(**d))
+        for d in result.hop_additions:
+            self._hop_additions.append(HopAddition(**d))
+
+        if result.style_name:
+            for s in self._all_styles:
+                if s.name == result.style_name:
+                    self.selected_style = s
+                    self.query_one("#style-filter", Input).value = result.style_name
+                    break
+
+        self._recipe_style_name = result.style_name
+        self._recipe_yeast = result.yeast
+        self._recipe_pitching_temp = result.pitching_temp
+        self._recipe_fermentation_time = result.fermentation_time
+        self._recipe_notes = result.notes
+
+        self._rebuild_malt_ui()
+        self._rebuild_hop_ui()
+        self._require_recalc()
+        if self._malt_additions:
+            self.query_one(f"#malt-wt-{self._malt_additions[0].uid}", Input).focus()
+        else:
+            self.query_one("#batch-size", Input).focus()
+        self.notify("Recipe created from wizard!", timeout=3)
+
     def action_new_recipe(self) -> None:
         self._malt_additions.clear()
         self._hop_additions.clear()
@@ -590,11 +674,17 @@ class BrewTUI(App):
         self.fg_estimate = 1.010
         self.mash_efficiency_pct = 75.0
         self.selected_style = None
+        self._recipe_style_name = None
+        self._recipe_yeast = None
+        self._recipe_pitching_temp = None
+        self._recipe_fermentation_time = None
+        self._recipe_notes = None
         self.query_one("#fg-estimate", Input).value = "1.010"
         self.query_one("#mash-efficiency", Input).value = "75"
         self._rebuild_malt_ui()
         self._rebuild_hop_ui()
         self._require_recalc()
+        self.query_one("#batch-size", Input).focus()
         self.notify("New recipe started", timeout=3)
 
     def action_save_recipe_as(self) -> None:
@@ -637,6 +727,11 @@ class BrewTUI(App):
         self.batch_size_l = recipe.get("batch_size_l", 20.0)
         self.fg_estimate = recipe.get("fg_estimate", 1.010)
         self.mash_efficiency_pct = recipe.get("mash_efficiency_pct", 75.0)
+        self._recipe_style_name = recipe.get("style_name")
+        self._recipe_yeast = recipe.get("yeast")
+        self._recipe_pitching_temp = recipe.get("pitching_temp")
+        self._recipe_fermentation_time = recipe.get("fermentation_time")
+        self._recipe_notes = recipe.get("notes")
         self._malt_additions = [
             MaltAddition(**a) for a in recipe.get("malt_additions", [])
         ]
@@ -656,15 +751,21 @@ class BrewTUI(App):
         self._rebuild_malt_ui()
         self._rebuild_hop_ui()
         self._require_recalc()
+        self.query_one("#batch-size", Input).focus()
         self.notify(f"Loaded: {name}", timeout=3)
 
     def _build_recipe_dict(self) -> dict:
         return {
-            "version": 2,
+            "version": 3,
             "unit_system": self._config.unit_system,
             "batch_size_l": self.batch_size_l,
             "fg_estimate": self.fg_estimate,
             "mash_efficiency_pct": self.mash_efficiency_pct,
+            "style_name": self._recipe_style_name,
+            "yeast": self._recipe_yeast,
+            "pitching_temp": self._recipe_pitching_temp,
+            "fermentation_time": self._recipe_fermentation_time,
+            "notes": self._recipe_notes,
             "malt_additions": [
                 {
                     "name": a.name,
