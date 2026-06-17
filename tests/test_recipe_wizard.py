@@ -407,9 +407,7 @@ async def test_dismiss_returns_none():
     app = BrewTUI()
     async with app.run_test(headless=True, size=(120, 30)) as pilot:
         await pilot.pause()
-        screen = RecipeWizardScreen(
-            app._all_styles, app._all_malts, app._all_hops
-        )
+        screen = RecipeWizardScreen(app._all_styles, app._all_malts, app._all_hops)
         results = []
         app.push_screen(screen, results.append)
         await pilot.pause()
