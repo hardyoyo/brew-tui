@@ -376,7 +376,7 @@ def _parse_recipe(path: Path, fermentables: dict, hops_index: dict) -> dict | No
         batch_size_gal = 5.0
 
     recipe_dict = {
-        "version": 2,
+        "version": 3,
         "unit_system": "imperial",
         "batch_size_l": round(batch_size_gal * 3.78541, 1),
         "fg_estimate": fg or 1.010,
@@ -456,6 +456,14 @@ def _import_recipe(recipe_file: Path, fermentables: dict, hops_index: dict) -> N
             break
     else:
         title = recipe_file.stem
+
+    recipe_dict["name"] = title
+    try:
+        rel = recipe_file.relative_to(BEER_RECIPES_DIR)
+        if len(rel.parts) > 1:
+            recipe_dict["style_name"] = rel.parts[0]
+    except ValueError:
+        pass
 
     output_name = _sanitize(title)
     output_path = RECIPE_OUTPUT_DIR / f"{output_name}.json"

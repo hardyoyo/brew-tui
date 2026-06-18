@@ -4,9 +4,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from textual.widgets import Button, Input, ListView
+from textual.widgets import Button, Input, ListView, Static
 
 from brew_tui.app import BrewTUI, MaltAddition
+from brew_tui.config import BrewConfig
 from brew_tui.recipe_io_screen import (
     _sanitize,
     recipe_files,
@@ -49,7 +50,9 @@ async def test_save_as_screen_composes():
         await pilot.pause()
         inp = screen.query_one("#sas-input", Input)
         assert inp is not None
-        assert inp.placeholder == "Recipe name..."
+        assert "New Year Porter" in inp.placeholder
+        hint = screen.query_one("#sas-hint", Static)
+        assert hint is not None
         screen.dismiss(None)
         await pilot.pause()
 
@@ -70,10 +73,9 @@ async def test_open_recipe_screen_empty():
 
 @pytest.mark.asyncio
 async def test_save_and_load_named_recipe():
-    app = BrewTUI()
     tmp = TemporaryDirectory()
-    app._config.recipe_path = tmp.name
-    app._config.save()
+    cfg = BrewConfig(recipe_path=tmp.name)
+    app = BrewTUI(config=cfg)
     async with app.run_test(headless=True, size=(120, 32)) as pilot:
         await pilot.pause()
 

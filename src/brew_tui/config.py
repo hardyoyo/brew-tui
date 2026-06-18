@@ -6,7 +6,7 @@ Auto-generates default config on first run.
 
 import json
 import os
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self
 
@@ -22,6 +22,7 @@ class BrewConfig:
     theme: str = "textual-dark"
     recipe_path: str = str(DEFAULT_RECIPE_DIR)
     unit_system: str = "imperial"
+    _source_path: Path | None = field(default=None, repr=False)
 
     @classmethod
     def load(cls, path: Path | None = None) -> Self:
@@ -34,16 +35,24 @@ class BrewConfig:
                     theme=data.get("theme", cls.theme),
                     recipe_path=data.get("recipe_path", cls.recipe_path),
                     unit_system=data.get("unit_system", cls.unit_system),
+                    _source_path=cfg_file,
                 )
         except (json.JSONDecodeError, OSError):
             pass
         return cls()
 
     def save(self, path: Path | None = None) -> None:
-        cfg_file = path or CONFIG_FILE
+        cfg_file = path or self._source_path
+        if cfg_file is None:
+            return
         cfg_file.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "theme": self.theme,
+            "recipe_path": self.recipe_path,
+            "unit_system": self.unit_system,
+        }
         with open(cfg_file, "w") as f:
-            json.dump(asdict(self), f, indent=2)
+            json.dump(data, f, indent=2)
 
     def ensure_dirs(self) -> None:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)

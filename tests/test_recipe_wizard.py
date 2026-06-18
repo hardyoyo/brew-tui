@@ -184,7 +184,7 @@ async def test_malt_parsing():
         assert malt["name"] == "Pale 2-Row"
         assert abs(malt["weight_kg"] - 5.0) < 0.01
         assert malt["ppg"] == 37
-        assert malt["lovibond"] == 2
+        assert malt["lovibond"] == 3.6
 
 
 @pytest.mark.asyncio

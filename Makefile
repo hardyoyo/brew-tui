@@ -17,7 +17,13 @@ install-pre-commit: ## Install pre-commit hooks
 test: ## Run all tests
 	pytest -v
 
-coverage: ## Run tests with coverage report
+coverage: ## Run tests with coverage report (fast — excludes textual)
+	pytest --cov=brew_tui --cov-report=term-missing \
+		tests/test_ingredients.py tests/test_engine.py \
+		tests/test_units.py tests/test_styles.py \
+		tests/test_config.py tests/test_inventory.py
+
+coverage-full: ## Run full test suite with coverage report
 	pytest --cov --cov-report=term-missing
 
 lint: ## Lint source and tests (ruff + black --check)
@@ -34,6 +40,9 @@ clean: ## Remove cache and build artifacts
 
 create-sample-recipe-data: ## Import sample recipes from mattsah/beer-recipes
 	python scripts/create_sample_recipe_data.py
+
+import-beerproto-ingredients: ## Regenerate beerproto_ingredients.json from beerproto dataset
+	python scripts/import_beerproto_ingredients.py
 
 screenshots: ## Generate SVG screenshots for documentation
 	python scripts/screenshots.py

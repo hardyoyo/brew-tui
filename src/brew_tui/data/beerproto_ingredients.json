@@ -1,0 +1,553 @@
+{
+  "format_version": 1,
+  "source": "beerproto/dataset",
+  "source_url": "https://github.com/beerproto/dataset",
+  "ebc_to_lovibond_factor": 1.97,
+  "malts": {
+    "Acidulated": {
+      "lovibond": 5.1,
+      "ppg": 35,
+      "ebc": 10.0,
+      "n": 2,
+      "source": "beerproto"
+    },
+    "Amber DME": {
+      "lovibond": 12.0,
+      "ppg": 43,
+      "ebc": 23.6,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Amber LME": {
+      "lovibond": 12.0,
+      "ppg": 35,
+      "ebc": 23.6,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Aromatic": {
+      "lovibond": 35.5,
+      "ppg": 35,
+      "ebc": 70.0,
+      "n": 1,
+      "source": "beerproto"
+    },
+    "Biscuit": {
+      "lovibond": 25.7,
+      "ppg": 34,
+      "ebc": 50.6,
+      "n": 6,
+      "source": "beerproto"
+    },
+    "Black Patent": {
+      "lovibond": 370,
+      "ppg": 30,
+      "ebc": 728.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Cara-Pils": {
+      "lovibond": 2.4,
+      "ppg": 33,
+      "ebc": 4.8,
+      "n": 2,
+      "source": "beerproto"
+    },
+    "CaraAroma": {
+      "lovibond": 110.0,
+      "ppg": 33,
+      "ebc": 216.7,
+      "n": 3,
+      "source": "beerproto"
+    },
+    "CaraMunich I": {
+      "lovibond": 35,
+      "ppg": 33,
+      "ebc": 69.0,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "CaraMunich II": {
+      "lovibond": 45,
+      "ppg": 33,
+      "ebc": 88.7,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "CaraMunich III": {
+      "lovibond": 60,
+      "ppg": 33,
+      "ebc": 118.2,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Chocolate": {
+      "lovibond": 259,
+      "ppg": 30,
+      "ebc": 510.2,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Crystal 20": {
+      "lovibond": 20,
+      "ppg": 34,
+      "ebc": 39.4,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Crystal 40": {
+      "lovibond": 40,
+      "ppg": 34,
+      "ebc": 78.8,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Crystal 60": {
+      "lovibond": 60,
+      "ppg": 34,
+      "ebc": 118.2,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Crystal 80": {
+      "lovibond": 80,
+      "ppg": 34,
+      "ebc": 157.6,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Dark DME": {
+      "lovibond": 22.0,
+      "ppg": 42,
+      "ebc": 43.3,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Dark LME": {
+      "lovibond": 20.0,
+      "ppg": 34,
+      "ebc": 39.4,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Extra Light DME": {
+      "lovibond": 2.0,
+      "ppg": 44,
+      "ebc": 3.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Extra Light LME": {
+      "lovibond": 1.5,
+      "ppg": 37,
+      "ebc": 3.0,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Flaked Oats": {
+      "lovibond": 2.9,
+      "ppg": 33,
+      "ebc": 5.8,
+      "n": 12,
+      "source": "beerproto"
+    },
+    "Flaked Wheat": {
+      "lovibond": 2.2,
+      "ppg": 37,
+      "ebc": 4.2,
+      "n": 4,
+      "source": "beerproto"
+    },
+    "Honey": {
+      "lovibond": 29.1,
+      "ppg": 34,
+      "ebc": 57.4,
+      "n": 2,
+      "source": "beerproto"
+    },
+    "Light DME": {
+      "lovibond": 3.0,
+      "ppg": 44,
+      "ebc": 5.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Light LME": {
+      "lovibond": 2.0,
+      "ppg": 36,
+      "ebc": 3.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Maris Otter": {
+      "lovibond": 2.9,
+      "ppg": 38,
+      "ebc": 5.7,
+      "n": 17,
+      "source": "beerproto"
+    },
+    "Melanoidin": {
+      "lovibond": 39.3,
+      "ppg": 35,
+      "ebc": 77.3,
+      "n": 8,
+      "source": "beerproto"
+    },
+    "Munich": {
+      "lovibond": 11.7,
+      "ppg": 35,
+      "ebc": 23.1,
+      "n": 45,
+      "source": "beerproto"
+    },
+    "Munich DME": {
+      "lovibond": 9.0,
+      "ppg": 43,
+      "ebc": 17.7,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Munich LME": {
+      "lovibond": 9.0,
+      "ppg": 35,
+      "ebc": 17.7,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Pale 2-Row": {
+      "lovibond": 3.6,
+      "ppg": 37,
+      "ebc": 7.1,
+      "n": 7,
+      "source": "beerproto"
+    },
+    "Pale 6-Row": {
+      "lovibond": 2.5,
+      "ppg": 35,
+      "ebc": 4.9,
+      "n": 1,
+      "source": "beerproto"
+    },
+    "Pilsner": {
+      "lovibond": 2.1,
+      "ppg": 37,
+      "ebc": 4.0,
+      "n": 56,
+      "source": "beerproto"
+    },
+    "Pilsner DME": {
+      "lovibond": 2.0,
+      "ppg": 44,
+      "ebc": 3.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Pilsner LME": {
+      "lovibond": 1.5,
+      "ppg": 37,
+      "ebc": 3.0,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Rice DME": {
+      "lovibond": 1.0,
+      "ppg": 44,
+      "ebc": 2.0,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Roasted Barley": {
+      "lovibond": 300,
+      "ppg": 30,
+      "ebc": 591.0,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Rye DME": {
+      "lovibond": 4.0,
+      "ppg": 43,
+      "ebc": 7.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Rye LME": {
+      "lovibond": 4.0,
+      "ppg": 35,
+      "ebc": 7.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Smoked": {
+      "lovibond": 4.6,
+      "ppg": 37,
+      "ebc": 9.2,
+      "n": 10,
+      "source": "beerproto"
+    },
+    "Special B": {
+      "lovibond": 126.9,
+      "ppg": 30,
+      "ebc": 250.0,
+      "n": 4,
+      "source": "beerproto"
+    },
+    "Victory": {
+      "lovibond": 28.0,
+      "ppg": 34,
+      "ebc": 55.2,
+      "n": 1,
+      "source": "beerproto"
+    },
+    "Vienna": {
+      "lovibond": 5.4,
+      "ppg": 36,
+      "ebc": 10.6,
+      "n": 32,
+      "source": "beerproto"
+    },
+    "Wheat DME": {
+      "lovibond": 3.0,
+      "ppg": 44,
+      "ebc": 5.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Wheat LME": {
+      "lovibond": 3.0,
+      "ppg": 36,
+      "ebc": 5.9,
+      "n": 0,
+      "source": "hardcoded"
+    },
+    "Wheat Malt": {
+      "lovibond": 2.9,
+      "ppg": 38,
+      "ebc": 5.8,
+      "n": 36,
+      "source": "beerproto"
+    }
+  },
+  "hops": {
+    "Cascade": {
+      "alpha_acid_pct": 5.7,
+      "n": 5,
+      "origins": [
+        "Argentina",
+        "Australia",
+        "New Zealand",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Centennial": {
+      "alpha_acid_pct": 10.5,
+      "n": 1,
+      "origins": [
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Chinook": {
+      "alpha_acid_pct": 13.0,
+      "n": 1,
+      "origins": [],
+      "source": "beerproto"
+    },
+    "Citra": {
+      "alpha_acid_pct": 12.5,
+      "n": 1,
+      "origins": [
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Mosaic": {
+      "alpha_acid_pct": 12.5,
+      "n": 2,
+      "origins": [
+        "United States"
+      ],
+      "source": "beerproto"
+    },
+    "Simcoe": {
+      "alpha_acid_pct": 13.0,
+      "n": 1,
+      "origins": [
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Amarillo": {
+      "alpha_acid_pct": 9.5,
+      "n": 2,
+      "origins": [
+        "US",
+        "United States"
+      ],
+      "source": "beerproto"
+    },
+    "Columbus": {
+      "alpha_acid_pct": 15.6,
+      "n": 2,
+      "origins": [
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Magnum": {
+      "alpha_acid_pct": 12.8,
+      "n": 3,
+      "origins": [
+        "Germany",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Saaz": {
+      "alpha_acid_pct": 4.1,
+      "n": 4,
+      "origins": [
+        "Czech Republic",
+        "Czechia",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Hallertau Mittelfr\u00fch": {
+      "alpha_acid_pct": 4.2,
+      "n": 1,
+      "origins": [
+        "Germany"
+      ],
+      "source": "beerproto"
+    },
+    "Tettnang": {
+      "alpha_acid_pct": 4.6,
+      "n": 6,
+      "origins": [
+        "Germany",
+        "Switzerland",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "East Kent Golding": {
+      "alpha_acid_pct": 5.5,
+      "n": 1,
+      "origins": [],
+      "source": "beerproto"
+    },
+    "Fuggle": {
+      "alpha_acid_pct": 5.0,
+      "n": 6,
+      "origins": [
+        "Great Britain",
+        "UK",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Willamette": {
+      "alpha_acid_pct": 5.5,
+      "n": 2,
+      "origins": [
+        "Australia",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Northern Brewer": {
+      "alpha_acid_pct": 8.6,
+      "n": 5,
+      "origins": [
+        "Belgium",
+        "Germany",
+        "US",
+        "United States"
+      ],
+      "source": "beerproto"
+    },
+    "Perle": {
+      "alpha_acid_pct": 8.2,
+      "n": 2,
+      "origins": [
+        "Germany",
+        "US"
+      ],
+      "source": "beerproto"
+    },
+    "Target": {
+      "alpha_acid_pct": 10.6,
+      "n": 2,
+      "origins": [
+        "Great Britain",
+        "UK"
+      ],
+      "source": "beerproto"
+    },
+    "Styrian Golding": {
+      "alpha_acid_pct": 8.9,
+      "n": 5,
+      "origins": [
+        "Austria and Slovenia",
+        "Slovenia"
+      ],
+      "source": "beerproto"
+    },
+    "Motueka": {
+      "alpha_acid_pct": 7.5,
+      "n": 1,
+      "origins": [
+        "New Zealand"
+      ],
+      "source": "beerproto"
+    },
+    "Nelson Sauvin": {
+      "alpha_acid_pct": 12.5,
+      "n": 1,
+      "origins": [
+        "New Zealand"
+      ],
+      "source": "beerproto"
+    },
+    "Galaxy": {
+      "alpha_acid_pct": 13.5,
+      "n": 2,
+      "origins": [
+        "Australia"
+      ],
+      "source": "beerproto"
+    },
+    "Sorachi Ace": {
+      "alpha_acid_pct": 13.8,
+      "n": 1,
+      "origins": [
+        "Japan"
+      ],
+      "source": "beerproto"
+    },
+    "Glacier": {
+      "alpha_acid_pct": 6.5,
+      "n": 1,
+      "origins": [],
+      "source": "beerproto"
+    },
+    "Mt. Hood": {
+      "alpha_acid_pct": 5.8,
+      "n": 2,
+      "origins": [
+        "US",
+        "United States"
+      ],
+      "source": "beerproto"
+    },
+    "Sterling": {
+      "alpha_acid_pct": 6.8,
+      "n": 1,
+      "origins": [
+        "US"
+      ],
+      "source": "beerproto"
+    }
+  }
+}

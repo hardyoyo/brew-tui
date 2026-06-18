@@ -232,6 +232,7 @@ class BrewTUI(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self._update_recipe_name_display()
         self._all_styles = load_styles()
         self._populate_style_list(self._all_styles)
         for gauge_id in (
@@ -432,6 +433,7 @@ class BrewTUI(App):
         if event.item is None:
             if event.list_view.id == "style-list":
                 self.selected_style = None
+                self._recipe_style_name = None
             return
         lv = event.list_view
         if lv.index is None:
@@ -440,7 +442,9 @@ class BrewTUI(App):
         if lv.id == "style-list":
             matches = search_styles(self._all_styles, self.style_query)
             if lv.index < len(matches):
-                self.selected_style = matches[lv.index]
+                style = matches[lv.index]
+                self.selected_style = style
+                self._recipe_style_name = style.name
 
         elif lv.id == "malt-list":
             matches = search_malts(self._all_malts, self.malt_query)
@@ -696,10 +700,19 @@ class BrewTUI(App):
             self._on_save_name,
         )
 
+    def _update_recipe_name_display(self) -> None:
+        if self._current_recipe_name:
+            self.sub_title = self._current_recipe_name
+        elif self.selected_style:
+            self.sub_title = f"Untitled — {self.selected_style.name}"
+        else:
+            self.sub_title = ""
+
     def _on_save_name(self, name: str | None) -> None:
         if name is None:
             return
         self._current_recipe_name = name
+        self._update_recipe_name_display()
         recipe = self._build_recipe_dict()
         path = Path(self._config.recipe_path) / f"{name}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -769,6 +782,10 @@ class BrewTUI(App):
             "pitching_temp": self._recipe_pitching_temp,
             "fermentation_time": self._recipe_fermentation_time,
             "notes": self._recipe_notes,
+            "og": self.og,
+            "srm": self.srm,
+            "ibu": self.ibu,
+            "abv": self.abv,
             "malt_additions": [
                 {
                     "name": a.name,
@@ -795,7 +812,7 @@ class BrewTUI(App):
         self.query_one("#theme-select", Select).focus()
 
     def on_select_changed(self, event: Select.Changed) -> None:
-        if event.select.id == "theme-select":
+        if event.select.id == "theme-select" and self._painted:
             self.theme = str(event.value)
             self._config.theme = str(event.value)
             self._config.save()
@@ -810,6 +827,7 @@ class BrewTUI(App):
     def watch_selected_style(self, style: Optional[Style]) -> None:
         if not self._painted:
             return
+        self._update_recipe_name_display()
         self._update_style_info(style)
         self._update_gauge_targets(style)
         self._refresh_all_displays()
