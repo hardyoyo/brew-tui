@@ -24,9 +24,7 @@ async def main() -> None:
         await pilot.pause()
 
         # ── 1. Default recipe state ──────────────────────────────
-        app.save_screenshot(
-            filename="screenshot-default.svg", path=str(OUTPUT_DIR)
-        )
+        app.save_screenshot(filename="screenshot-default.svg", path=str(OUTPUT_DIR))
 
         # ── 2. Recipe with ingredients entered ───────────────────
         app.batch_size_l = 23.0
@@ -45,9 +43,7 @@ async def main() -> None:
         app.mash_efficiency_pct = 72.0
         await pilot.pause()
 
-        app.save_screenshot(
-            filename="screenshot-recipe.svg", path=str(OUTPUT_DIR)
-        )
+        app.save_screenshot(filename="screenshot-recipe.svg", path=str(OUTPUT_DIR))
 
         # ── 3. Select an IPA style to show gauges ────────────────
         app.style_query = "IPA"
@@ -59,17 +55,13 @@ async def main() -> None:
             lv.action_select_cursor()
             await pilot.pause()
 
-        app.save_screenshot(
-            filename="screenshot-style.svg", path=str(OUTPUT_DIR)
-        )
+        app.save_screenshot(filename="screenshot-style.svg", path=str(OUTPUT_DIR))
 
         # ── 4. Open inventory wizard ─────────────────────────────
         app.action_open_inventory()
         await pilot.pause()
 
-        app.save_screenshot(
-            filename="screenshot-inventory.svg", path=str(OUTPUT_DIR)
-        )
+        app.save_screenshot(filename="screenshot-inventory.svg", path=str(OUTPUT_DIR))
 
     print(f"Screenshots saved to {OUTPUT_DIR}/")
 

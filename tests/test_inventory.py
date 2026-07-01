@@ -107,8 +107,11 @@ def test_parse_malts_empty():
     assert parse_malts("") == []
 
 
-def test_parse_malts_bad_format():
-    assert parse_malts("just a name") == []
+def test_parse_malts_bare_name():
+    items = parse_malts("Pale 2-Row")
+    assert len(items) == 1
+    assert items[0].name == "Pale 2-Row"
+    assert items[0].amount_kg == 0.0
 
 
 def test_parse_hops_basic():

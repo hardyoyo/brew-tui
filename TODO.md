@@ -114,6 +114,30 @@
 - [x] Recipe format v2 includes `unit_system` field (values still stored in metric internally)
 - [x] 130 tests pass, lint clean
 
+## ✅ Phase 11: Brew Wizard (Done)
+- [x] Conversational recipe wizard (`Ctrl+W` / "Brew Wizard" button)
+- [x] 9 stages: style, batch size, base malts, specialty malts, hops & schedule, yeast, pitching temp, fermentation time, notes
+- [x] Fuzzy matching of style, malt, and hop input against built-in + inventory databases
+- [x] Parses `name: weight @ time` format with unit conversion (lb/kg/oz/g)
+- [x] Auto-looks up PPG, Lovibond, AA% from ingredient database
+- [x] Populates main form on completion — user can still tweak everything
+- [x] Recipe format v3 with yeast, pitching temp, fermentation time, notes metadata
+- [x] 174 tests pass, lint clean
+
+## ✅ Phase 12: Navigation & Interaction Polish (Done)
+- [x] Focus jumps to weight input after selecting malt/hop from list
+- [x] Search filter auto-clears after adding an ingredient
+- [x] Focus moves to filter input after removing a row (ready to add another)
+- [x] Focus batch-size on New Recipe and after loading a recipe
+- [x] `Ctrl+N` (New Recipe), `Ctrl+S` (Save As), `Ctrl+O` (Open) shortcuts
+- [x] Wider left pane (40→62 cells) for better readability
+- [x] Taller ingredient/style lists (6→8 rows)
+- [x] 174 tests pass, lint clean
+
+## Up Next
+- [ ] **Style checkpoint validation** — after each ingredient stage, check additions against the selected style's range. "Woah there, that's way too bitter for a Kolsch — maybe tone down the bittering hops?"
+- [ ] **Quick-paste recipe import** — free-text `TextArea` screen where you paste a recipe in natural format ("10 lbs Pale 2-Row, 1 oz Cascade @ 60...") and it parses into the structured form
+
 ## Future
 - [ ] Two-column malt/hop rows on wider terminals
 - [ ] Tap water / mineral profile inputs

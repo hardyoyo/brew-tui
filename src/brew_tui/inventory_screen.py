@@ -8,9 +8,9 @@ from textual.widgets import Footer, Header, Input, RichLog
 
 from .inventory import (
     INVENTORY_FILENAME,
-    STAGES,
     STAGE_DONE,
     STAGE_WELCOME,
+    _build_stages,
     Inventory,
 )
 
@@ -22,10 +22,11 @@ class InventoryScreen(Screen):
         ("escape", "dismiss_inventory", "Return"),
     ]
 
-    def __init__(self, recipe_dir: str | None = None):
+    def __init__(self, recipe_dir: str | None = None, imperial: bool = False):
         super().__init__()
         self._recipe_dir = recipe_dir or str(Path.home() / ".brew-tui-recipes")
         self._inventory_file = Path(self._recipe_dir) / INVENTORY_FILENAME
+        self._stages = _build_stages(imperial)
 
     def compose(self) -> ComposeResult:
         yield Header("Build Inventory")
@@ -46,10 +47,17 @@ class InventoryScreen(Screen):
 
     def _next_stage(self) -> None:
         self._stage += 1
-        if self._stage >= len(STAGES):
+        if self._stage >= len(self._stages):
             self._finish()
             return
-        stage = STAGES[self._stage]
+        self._show_stage()
+
+    def _prev_stage(self) -> None:
+        self._stage -= 1
+        self._show_stage()
+
+    def _show_stage(self) -> None:
+        stage = self._stages[self._stage]
         log = self.query_one("#conv-log", RichLog)
         log.write("")
         log.write(f"[bold yellow]Brewer[/]  Let's talk [bold]{stage['title']}[/]!")
@@ -75,7 +83,16 @@ class InventoryScreen(Screen):
         log = self.query_one("#conv-log", RichLog)
         log.write(f"[bold cyan]You[/]  {text}")
 
-        if self._stage >= len(STAGES):
+        if self._stage >= len(self._stages):
+            return
+
+        if text.lower() in ("back", "prev", "previous"):
+            if self._stage > 0:
+                log.write("[bold yellow]Brewer[/]  Sure, let's go back!")
+                self._prev_stage()
+            else:
+                log.write("[bold yellow]Brewer[/]  You're at the start already!")
+                inp.focus()
             return
 
         if text.lower() in ("skip", "done", "none", "pass", ""):
@@ -83,13 +100,13 @@ class InventoryScreen(Screen):
             self._next_stage()
             return
 
-        stage = STAGES[self._stage]
+        stage = self._stages[self._stage]
         items = stage["parser"](text)
         if not items:
             log.write(
                 "[bold yellow]Brewer[/]  "
-                "Hmm, I couldn't read that. Try [bold]name:amount[/] "
-                "format separated by commas, or type [bold]skip[/]."
+                "Hmm, I couldn't read that. Try [bold]name[/] or [bold]name:amount[/] "
+                "separated by commas, or type [bold]skip[/]."
             )
             inp.focus()
             return
